@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{base :: Layout(~{::section})}">
+<section th:fragment="section" class="container my-4">
+    <div class="card shadow p-4">
+        <h2 class="mb-4 text-center">Wallet Details</h2>
+
+        <div class="mb-3">
+            <p><strong>User ID:</strong> <span th:text="${details.userId}"></span></p>
+            <p><strong>Balance:</strong> ₹<span th:text="${details.balance}"></span></p>
+        </div>
+
+        <hr>
+
+        <h4>Transaction History</h4>
+        <ul class="list-group mb-4">
+            <li class="list-group-item" th:each="txn : ${details.transactionHistory}" th:text="${txn}">
+                No transactions
+            </li>
+        </ul>
+
+        <div class="row">
+            <!-- Add Funds -->
+            <div class="col-md-6">
+                <form th:action="@{/wallet/addFunds}" method="post" class="mb-3">
+                    <input type="number" class="form-control" name="amount" placeholder="Enter amount" required min="1">
+                    <button type="submit" class="btn btn-success">Add Funds</button>
+                </form>
+            </div>
+
+            <!-- Debit Funds -->
+            <div class="col-md-6">
+                <form th:action="@{/wallet/debitFunds}" method="post" class="mb-3">
+                    <input type="number" class="form-control" name="amount" placeholder="Enter amount" required min="1">
+                    <button type="submit" class="btn btn-danger">Debit Funds</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="mt-3">
+            <p class="text-success fw-bold" th:if="${message}" th:text="${message}"></p>
+            <p class="text-danger fw-bold" th:if="${error}" th:text="${error}"></p>
+        </div>
+    </div>
+</section>
+</html>
+

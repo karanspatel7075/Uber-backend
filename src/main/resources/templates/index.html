@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{base::Layout(~{::section})}">
+<head>
+<head>
+    <meta charset="UTF-8">
+    <title>Uber Application</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font for a more Uber-like feel */
+        body {
+            font-family: 'Uber Move Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+        /* Style for the map container to ensure it fills its parent */
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="font-sans text-gray-800">
+<section>
+
+    <main class="flex flex-col md:flex-row min-h-[calc(100vh-64px)]">
+        <!-- Left Content -->
+        <div class="md:w-1/2 p-10 lg:p-20 flex flex-col justify-center">
+            <h1 class="text-4xl sm:text-5xl font-bold leading-tight mb-4">
+                Get ready for your first trip
+            </h1>
+            <p class="text-lg text-gray-600 max-w-lg mb-8">
+                Discover the convenience of Uber. Request a ride now, or schedule one for later directly from your browser.
+            </p>
+            <div class="space-y-4 max-w-sm">
+                <div class="relative">
+                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black h-2 w-2 rounded-full"></div>
+                    <input type="text" placeholder="Pickup location" class="w-full pl-8 py-3 pr-4 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black">
+                    <button class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1.5-6.5a.5.5 0 011 0v3.5a.5.5 0 01-1 0v-3.5zm3.5-3a.5.5 0 00-1 0v3.5a.5.5 0 001 0v-3.5z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="relative">
+                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 bg-gray-400 h-2 w-2"></div>
+                    <input type="text" placeholder="Dropoff location" class="w-full pl-8 py-3 pr-4 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black">
+                </div>
+                <button class="w-full bg-black text-white py-4 rounded font-semibold text-lg hover:bg-gray-800 transition-colors duration-200">
+                    See prices
+                </button>
+            </div>
+        </div>
+
+        <!-- Right Map Image -->
+        <div class="md:w-1/2 flex items-center justify-center p-6">
+            <div id="map" class="w-full max-w-xl h-96 rounded-lg shadow-md"></div>
+        </div>
+
+
+    </main>
+
+    <div class="container mx-auto px-4 py-16 lg:px-20">
+        <h2 class="text-3xl lg:text-4xl font-bold mb-12 text-center">
+            Book your trip on your phone or computer
+        </h2>
+
+        <!-- Wrapper for all 3 sections with vertical spacing -->
+        <div class="space-y-8">
+            <!-- Section 1 -->
+            <div class="flex flex-col lg:flex-row items-center lg:items-start lg:space-x-12">
+                <div class="w-full lg:w-1/2 mb-8 lg:mb-0 flex justify-center">
+                    <img src="https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_254,w_450/v1740756046/assets/ac/584f92-4bf8-466c-8d2f-f549556e0aed/original/mobile-request.png"
+                         alt="Add your trip details"
+                         class="rounded-lg shadow-md w-96">
+                </div>
+                <div class="w-full lg:w-1/2">
+                    <h3 class="text-2xl font-bold mb-2">1. Add your trip details</h3>
+                    <p class="text-lg text-gray-600">
+                        Enter your pickup spot and destination, and check prices for your trip.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Section 2 -->
+            <div class="flex flex-col lg:flex-row items-center lg:items-start lg:space-x-12">
+                <div class="w-full lg:w-1/2 mb-8 lg:mb-0 flex justify-center">
+                    <img src="https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_254,w_450/v1740756086/assets/0b/48199f-77c1-4078-8f06-1e4d996e4c51/original/mobile-payment.png"
+                         alt="Pay easily"
+                         class="rounded-lg shadow-md w-96">
+                </div>
+                <div class="w-full lg:w-1/2">
+                    <h3 class="text-2xl font-bold mb-2">2. Pay easily</h3>
+                    <p class="text-lg text-gray-600">
+                        Add your preferred payment method, then choose among the ride options available in your location.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Section 3 -->
+            <div class="flex flex-col lg:flex-row items-center lg:items-start lg:space-x-12">
+                <div class="w-full lg:w-1/2 mb-8 lg:mb-0 flex justify-center">
+                    <img src="https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_254,w_450/v1740756134/assets/cb/cca6d5-fd79-4f63-abd4-c76f4ea42de3/original/mobile-driver.png"
+                         alt="Meet your driver"
+                         class="rounded-lg shadow-md w-96">
+                </div>
+                <div class="w-full lg:w-1/2">
+                    <h3 class="text-2xl font-bold mb-2">3. Meet your driver</h3>
+                    <p class="text-lg text-gray-600">
+                        Uber will match you with a driver nearby, and you'll get updates on your phone or computer.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <footer class="bg-gray-900 text-white text-center py-4">
+        <p class="text-sm">&copy; 2025 Uber Clone. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        function initMap() {
+            const map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: 20.3888, lng: 72.9268 }, // Coordinates for Vapi, India
+                zoom: 10,
+            });
+        }
+    </script>
+    <script>
+        function initMap() {
+            const location = { lat: 20.397, lng: 72.918 }; // Example: Vapi, Gujarat
+            const map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 12,
+                center: location,
+            });
+
+            new google.maps.Marker({
+                position: location,
+                map: map,
+                title: "Vapi, Gujarat",
+            });
+        }
+    </script>
+
+    <script async
+            defer
+            src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
+    </script>
+
+</section>
+</body>
+</html>

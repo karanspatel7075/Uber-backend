@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Become a Driver | Navio</title>
+</head>
+<body>
+<h1>Driver Application Form</h1>
+<form th:action="@{/driver/applyForm}" th:object="${driverRequestDto}" method="post">
+  <input type="text" th:field="*{vehicleId}" placeholder="Vehicle Number"/>
+  <input type="text" th:field="*{currentLocation}" placeholder="Current Location"/>
+  <button type="submit">Submit</button>
+</form>
+</body>
+</html>

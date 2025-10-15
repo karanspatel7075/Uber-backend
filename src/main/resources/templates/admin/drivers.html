@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{base::Layout(~{::section})}">
+<head>
+  <meta charset="UTF-8">
+  <title>Pending Drivers | Navio</title>
+</head>
+<body>
+<section>
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">Pending Driver Applications</h2>
+
+    <table class="table table-bordered text-center">
+      <thead class="table-dark">
+      <tr>
+        <th>ID</th>
+        <th>User ID</th>
+        <th>Vehicle ID</th>
+        <th>Current Location</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="driver : ${pendingDrivers}">
+        <td th:text="${driver.id}"></td>
+        <td th:text="${driver.userId}"></td>
+        <td th:text="${driver.vehicleId}"></td>
+        <td th:text="${driver.currentLocation}"></td>
+        <td th:text="${driver.status}"></td>
+        <td>
+          <form th:action="@{/admin/approve-driver/{id}(id=${driver.id})}" method="post">
+            <button class="btn btn-success btn-sm">Approve</button>
+          </form>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+</body>
+</html>
