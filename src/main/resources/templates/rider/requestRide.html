@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{base::Layout(~{::section})}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Request Ride | Navio</title>
+</head>
+
+<body>
+<section>
+
+    <div class="container mt-5">
+        <div class="card shadow-lg p-4 rounded-4" style="max-width: 600px; margin: auto;">
+            <h2 class="text-center mb-4">🚗 Request a Ride</h2>
+
+            <!-- Flash message -->
+            <div th:if="${message}" class="alert alert-success text-center" th:text="${message}"></div>
+
+            <form th:action="@{/rider/requestRide}" th:object="${rideRequestDto}" method="post">
+
+                <div class="mb-3">
+                    <label for="pickupLocation" class="form-label">Pickup Location</label>
+                    <input type="text" id="pickupLocation" th:field="*{pickUpLocation}" class="form-control" placeholder="Enter your pickup location" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="dropLocation" class="form-label">Drop Location</label>
+                    <input type="text" id="dropLocation" th:field="*{dropLocation}" class="form-control" placeholder="Enter your drop location" required>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="/rider/dashboard" class="btn btn-outline-secondary">Back to Dashboard</a>
+                    <button type="submit" class="btn btn-primary">Request Ride</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</section>
+</body>
+</html>

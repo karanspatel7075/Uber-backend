@@ -76,7 +76,7 @@ public class DriverServiceImple {
         if(rideOpt.isPresent()) {
             Ride ride = rideOpt.get();
             ride.setStatus("Accepted");
-            ride.setDriverId(driverId);
+            ride.setRiderId(driverId);
             rideRepository.save(ride);
             return "Ride is accepted Successfully";
         }

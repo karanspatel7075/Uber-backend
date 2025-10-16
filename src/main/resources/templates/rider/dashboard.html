@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{base::Layout(~{::section})}">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Rider Dashboard | Navio</title>
+</head>
+
+<body>
+<section>
+  <div class="container mt-5">
+    <div class="card shadow-lg p-4 rounded-4">
+      <h2 class="text-center mb-4">🧭 Rider Dashboard</h2>
+
+      <!-- Flash message -->
+      <div th:if="${message}" class="alert alert-success text-center" th:text="${message}"></div>
+
+      <div class="d-flex justify-content-between mb-3">
+        <a href="/rider/requestRide" class="btn btn-primary">Request New Ride</a>
+      </div>
+
+      <!-- Rides Table -->
+      <div th:if="${#lists.isEmpty(rides)}" class="text-center text-muted">
+        <p>No rides found. Request your first ride!</p>
+      </div>
+
+      <div th:if="${!#lists.isEmpty(rides)}">
+        <table class="table table-bordered table-hover align-middle">
+          <thead class="table-dark text-center">
+          <tr>
+            <th>ID</th>
+            <th>Pickup</th>
+            <th>Drop</th>
+            <th>Requested Time</th>
+            <th>Status</th>
+            <th>Rating</th>
+            <th>Actions</th>
+          </tr>
+          </thead>
+          <tbody class="text-center">
+          <tr th:each="ride : ${rides}">
+            <td th:text="${ride.id}"></td>
+            <td th:text="${ride.pickUpLocation}"></td>
+            <td th:text="${ride.dropLocation}"></td>
+            <td th:text="${#temporals.format(ride.requestedTime, 'dd-MM-yyyy HH:mm')}"></td>
+            <td>
+                                <span th:text="${ride.status}"
+                                      th:classappend="${ride.status == 'CANCELLED'} ? 'text-danger' :
+                                                      (ride.status == 'COMPLETED' ? 'text-success' : 'text-warning')">
+                                </span>
+            </td>
+            <td th:text="${ride.rating ?: '-'}"></td>
+
+            <td>
+              <!-- Cancel -->
+              <form th:if="${ride.status.equals('Requested')}" th:action="@{/rider/cancelRide}" method="post" style="display:inline;">
+                <input type="hidden" name="rideId" th:value="${ride.id}">
+                <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+              </form>
+
+              <!-- Rate -->
+              <form th:if="${ride.status.equals('Completed') and ride.rating == null}" th:action="@{/rider/rateDriver}" method="post" class="d-inline-flex align-items-center">
+                <input type="hidden" name="rideId" th:value="${ride.id}">
+                <input type="number" name="rating" min="1" max="5" step="0.5" class="form-control form-control-sm me-2" placeholder="★" required>
+                <button type="submit" class="btn btn-success btn-sm">Rate</button>
+              </form>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</section>
+</body>
+</html>

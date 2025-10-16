@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Setter
@@ -20,10 +22,11 @@ public class Ride {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long userId;
-    private Long driverId;
-    private String pickupLocation;
+    private Long riderId; // Basically User
+    private String pickUpLocation;
     private String dropLocation;
+    private LocalDateTime requestedTime;
     private String status; // Requested, Accepted, Ongoing, Completed
-    private double fare;
+    private Double fare;
+    private Double rating;
 }
