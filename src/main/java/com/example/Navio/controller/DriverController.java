@@ -28,14 +28,6 @@ public class DriverController {
     @Autowired
     private DriverServiceImple driverServiceImple;
 
-    @ModelAttribute
-    public void populateUser(Principal principal, Model model) {
-        if(principal != null) {
-            String email = principal.getName();
-            User user = userRepository.findByEmail(email).orElse(null);
-            model.addAttribute("user", user);
-        }
-    }
 
     @GetMapping("/dashboard")
     public String dashboard(HttpServletRequest request, Model model) {
