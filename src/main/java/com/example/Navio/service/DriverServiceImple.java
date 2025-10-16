@@ -51,6 +51,7 @@ public class DriverServiceImple {
     public void approveDriver(Long driverId) {
         Driver driver = driverRepository.findById(driverId).orElseThrow(() -> new RuntimeException("Driver not found"));
         driver.setStatus("Approved");
+        driver.setAvailable(true);
         driverRepository.save(driver);
 
 //      That’s wrong — driver.getId() is driver table’s ID, not user’s.
