@@ -1,8 +1,12 @@
 package com.example.Navio.service;
 
+import com.example.Navio.config.NearestDriverStrategy;
 import com.example.Navio.dto.RideRequestDto;
+import com.example.Navio.interfaces.DriverMatchingStrategy;
+import com.example.Navio.model.Driver;
 import com.example.Navio.model.Ride;
 import com.example.Navio.model.User;
+import com.example.Navio.repository.DriverRepository;
 import com.example.Navio.repository.RideRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,15 +20,34 @@ public class RideRequestServiceImple {
     @Autowired
     private RideRepository rideRepository;
 
+    @Autowired
+    private DriverRepository driverRepository;
+
+    @Autowired
+    private DriverMatchingStrategy driverMatchingStrategy;
+
 //    1. Request Ride
-    public void requestRide(RideRequestDto dto, User user) {
+    public Driver requestRide(RideRequestDto dto, User user) {
         Ride ride = new Ride();
         ride.setRiderId(user.getId());
         ride.setPickUpLocation(dto.getPickUpLocation());
         ride.setDropLocation(dto.getDropLocation());
         ride.setRequestedTime(LocalDateTime.now());
         ride.setStatus("Requested");
+
+        List<Driver> getAllAvailableDrivers = driverRepository.findByAvailableTrue();
+
+        Driver matchedDriver = driverMatchingStrategy.findDriver(getAllAvailableDrivers, dto);
+        if(matchedDriver != null) {
+            matchedDriver.setAvailable(false);
+            ride.setDriverId(matchedDriver.getId());
+            ride.setStatus("Matched");
+        }
+        else {
+            ride.setStatus("Pending");
+        }
         rideRepository.save(ride);
+        return matchedDriver;
     }
 
     public String cancelRide(Long riderId) {

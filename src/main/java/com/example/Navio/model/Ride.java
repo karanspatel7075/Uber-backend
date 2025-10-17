@@ -23,6 +23,7 @@ public class Ride {
     private Long id;
 
     private Long riderId; // Basically User
+    private Long driverId;
     private String pickUpLocation;
     private String dropLocation;
     private LocalDateTime requestedTime;

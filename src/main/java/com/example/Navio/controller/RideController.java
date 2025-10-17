@@ -67,6 +67,6 @@ public class RideController {
     public String rateDriver(@RequestParam Long rideId, @RequestParam Double rating, RedirectAttributes redirectAttributes) {
         String message = rideRequestServiceImple.rateDriver(rideId, rating);
         redirectAttributes.addFlashAttribute("message", message);
-        return "redirect:/rider?dashboard";
+        return "redirect:/rider/dashboard";
     }
 }

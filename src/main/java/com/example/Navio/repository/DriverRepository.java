@@ -12,4 +12,5 @@ import java.util.Optional;
 public interface DriverRepository extends JpaRepository<Driver, Long> {
     Driver findByUserId(Long userId);
     List<Driver> findByStatus(String status);
+    List<Driver> findByAvailableTrue();
 }
