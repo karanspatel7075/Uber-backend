@@ -26,28 +26,44 @@ public class RideRequestServiceImple {
     @Autowired
     private DriverMatchingStrategy driverMatchingStrategy;
 
+    @Autowired
+    private  DriverServiceImple driverServiceImple;
+
+    private double[] getCoordinates(String city) {
+        return switch (city.toLowerCase()) {
+            case "vapi" -> new double[]{20.3710, 72.9043};
+            case "daman" -> new double[]{20.4143, 72.8324};
+            case "surat" -> new double[]{21.1702, 72.8311};
+            case "valsad" -> new double[]{20.6107, 72.9342};
+            case "navsari" -> new double[]{20.9490, 72.9243};
+            default -> new double[]{0.0, 0.0}; // fallback if not found
+        };
+    }
+
 //    1. Request Ride
-    public Driver requestRide(RideRequestDto dto, User user) {
+    public void requestRide(Long driverId, RideRequestDto dto, User user) {
         Ride ride = new Ride();
+        Driver driver = driverRepository.findById(driverId).orElseThrow();
+        ride.setDriverId(driverId);
         ride.setRiderId(user.getId());
         ride.setPickUpLocation(dto.getPickUpLocation());
         ride.setDropLocation(dto.getDropLocation());
         ride.setRequestedTime(LocalDateTime.now());
-        ride.setStatus("Requested");
 
-        List<Driver> getAllAvailableDrivers = driverRepository.findByAvailableTrue();
+        double[] pickupCoords = getCoordinates(dto.getPickUpLocation());
+        double[] dropCoords = getCoordinates(dto.getDropLocation());
 
-        Driver matchedDriver = driverMatchingStrategy.findDriver(getAllAvailableDrivers, dto);
-        if(matchedDriver != null) {
-            matchedDriver.setAvailable(false);
-            ride.setDriverId(matchedDriver.getId());
-            ride.setStatus("Matched");
-        }
-        else {
-            ride.setStatus("Pending");
-        }
+        ride.setPickUpLatitude(pickupCoords[0]);
+        ride.setPickUpLongitude(pickupCoords[1]);
+        ride.setDropLatitude(dropCoords[0]);
+        ride.setDropLongitude(dropCoords[1]);
+
+        ride.setStatus("Matched");
+        ride.setFare(driverServiceImple.calculateFare(50));
+
+        driver.setAvailable(false);
+        driverRepository.save(driver);
         rideRepository.save(ride);
-        return matchedDriver;
     }
 
     public String cancelRide(Long riderId) {

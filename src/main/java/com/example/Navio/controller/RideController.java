@@ -2,8 +2,11 @@ package com.example.Navio.controller;
 
 import com.example.Navio.auth.AuthTokenGen;
 import com.example.Navio.dto.RideRequestDto;
+import com.example.Navio.interfaces.DriverMatchingStrategy;
+import com.example.Navio.model.Driver;
 import com.example.Navio.model.Ride;
 import com.example.Navio.model.User;
+import com.example.Navio.repository.DriverRepository;
 import com.example.Navio.repository.UserRepository;
 import com.example.Navio.service.RideRequestServiceImple;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,7 +29,13 @@ public class RideController {
     private UserRepository userRepository;
 
     @Autowired
+    private DriverRepository driverRepository;
+
+    @Autowired
     private RideRequestServiceImple rideRequestServiceImple;
+
+    @Autowired
+    private DriverMatchingStrategy driverMatchingStrategy;
 
     @GetMapping("/dashboard")
     public String rideDashboard(HttpServletRequest request, Model model) {
@@ -45,15 +54,36 @@ public class RideController {
         return "rider/requestRide";
     }
 
-    @PostMapping("/requestRide")
-    public String requestRide(@ModelAttribute RideRequestDto dto, HttpServletRequest request, Model model, RedirectAttributes redirectAttributes) {
+    @PostMapping("/selectDriver")
+    public String requestRide(@ModelAttribute RideRequestDto dto, @RequestParam Long driverId, HttpServletRequest request, Model model, RedirectAttributes redirectAttributes) {
         String token = (String) request.getSession().getAttribute("jwtToken");
         String email = authTokenGen.getUsernameFromToken(token);
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("No user found"));
 
-        rideRequestServiceImple.requestRide(dto, user);
+        rideRequestServiceImple.requestRide(driverId, dto, user);
         redirectAttributes.addFlashAttribute("message", "Ride requested successfully ");
         return "redirect:/rider/dashboard";
+    }
+
+    @PostMapping("/findDriver")
+    public String findDriver(@ModelAttribute RideRequestDto rideRequestDto, HttpServletRequest request, Model model) {
+        String token = (String) request.getSession().getAttribute("jwtToken");
+        String email = authTokenGen.getUsernameFromToken(token);
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Driver> availableDrivers = driverRepository.findByAvailableTrue();
+
+        List<Driver> nearByDriver = availableDrivers.stream()
+                .filter(d -> d.getCurrentLocation().equalsIgnoreCase(rideRequestDto.getPickUpLocation()))
+                .toList();
+
+        if(nearByDriver.isEmpty()) {
+            nearByDriver = availableDrivers;
+        }
+
+        model.addAttribute("dto", rideRequestDto);
+        model.addAttribute("drivers", nearByDriver);
+        return "rider/selectDriver";
     }
 
     @PostMapping("/cancelRide")

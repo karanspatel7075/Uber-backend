@@ -26,5 +26,8 @@ public class Driver {
     // Store uploaded file path or URL
     private String img;
 
+    private double longitude;
+    private double latitude;
+
 }
 

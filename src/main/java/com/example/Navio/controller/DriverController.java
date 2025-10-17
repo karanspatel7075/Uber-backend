@@ -75,8 +75,8 @@ public class DriverController {
 
     @PostMapping("/updateLocation")
     public String updateLocation(@RequestParam Long driverId, @RequestParam String location, RedirectAttributes redirectAttributes) {
-        String message = driverServiceImple.updateDriverLocation(driverId, location);
-        redirectAttributes.addFlashAttribute("message", message);
+        driverServiceImple.updateDriverLocation(driverId, location);
+        redirectAttributes.addFlashAttribute("message", "Successfully Updated");
         return "redirect:/driver/dashboard";
     }
 }

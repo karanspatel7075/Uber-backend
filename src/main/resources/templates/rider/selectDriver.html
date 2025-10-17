@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{base::Layout(~{::section})}">
+<head>
+  <meta charset="UTF-8">
+  <title>Select Driver | Navio</title>
+</head>
+
+<body>
+<section>
+  <div class="container mt-5">
+    <div class="card p-4 rounded-4 shadow-lg">
+      <h3 class="text-center mb-4">Available Drivers</h3>
+
+      <div th:if="${drivers.isEmpty()}">
+        <p class="text-center text-danger">No drivers available nearby 😞</p>
+      </div>
+
+      <div th:each="driver : ${drivers}" class="border p-3 rounded mb-3">
+<!--        <p><strong>Name:</strong> <span th:text="${driver.name}"></span></p>-->
+        <p><strong>Vehicle:</strong> <span th:text="${driver.vehicleId}"></span></p>
+        <p><strong>Location:</strong> <span th:text="${driver.currentLocation}"></span></p>
+
+        <form th:action="@{/rider/selectDriver}" method="post">
+          <input type="hidden" name="driverId" th:value="${driver.id}">
+          <input type="hidden" name="pickUpLocation" th:value="${dto.pickUpLocation}">
+          <input type="hidden" name="dropLocation" th:value="${dto.dropLocation}">
+          <button type="submit" class="btn btn-primary">Select Driver</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

@@ -26,6 +26,12 @@ public class Ride {
     private Long driverId;
     private String pickUpLocation;
     private String dropLocation;
+
+    private double pickUpLatitude;
+    private double pickUpLongitude;
+    private double dropLatitude;
+    private double dropLongitude;
+
     private LocalDateTime requestedTime;
     private String status; // Requested, Accepted, Ongoing, Completed
     private Double fare;

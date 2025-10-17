@@ -32,6 +32,17 @@ public class DriverServiceImple {
     @Autowired
     private AuthTokenGen authTokenGen;
 
+    private double[] getCoordinates(String city) {
+        return switch (city.toLowerCase()) {
+            case "vapi" -> new double[]{20.3710, 72.9043};
+            case "daman" -> new double[]{20.4143, 72.8324};
+            case "surat" -> new double[]{21.1702, 72.8311};
+            case "valsad" -> new double[]{20.6107, 72.9342};
+            case "navsari" -> new double[]{20.9490, 72.9243};
+            default -> new double[]{0.0, 0.0}; // fallback if not found
+        };
+    }
+
     public Driver applyForDriver(DriverRequestDto driverDto, User user) {
         Driver driver = new Driver();
         driver.setUserId(user.getId());
@@ -116,20 +127,12 @@ public class DriverServiceImple {
         return baseFare + (perKmRate * distanceCovered);
     }
 
-    public String updateDriverLocation(Long driverId, String location) {
-        Optional<Driver> driverOpt = driverRepository.findById(driverId);
-        if(driverOpt.isPresent()) {
-            Driver driver = driverOpt.get();
-            driver.setCurrentLocation(location);
-            driverRepository.save(driver);
-            return "Driver location updated!";
-        }
-
-        return "Driver not found!";
+    public void updateDriverLocation(Long driverId, String location) {
+        Driver driver = driverRepository.findById(driverId).orElseThrow();
+        double[] coords = getCoordinates(location);
+        driver.setLatitude(coords[0]);
+        driver.setLongitude(coords[1]);
+        driver.setCurrentLocation(location);
+        driverRepository.save(driver);
     }
-
-
-
-
-
 }

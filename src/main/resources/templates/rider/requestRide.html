@@ -17,7 +17,7 @@
             <!-- Flash message -->
             <div th:if="${message}" class="alert alert-success text-center" th:text="${message}"></div>
 
-            <form th:action="@{/rider/requestRide}" th:object="${rideRequestDto}" method="post">
+            <form th:action="@{/rider/findDriver}" th:object="${rideRequestDto}" method="post">
 
                 <div class="mb-3">
                     <label for="pickupLocation" class="form-label">Pickup Location</label>
