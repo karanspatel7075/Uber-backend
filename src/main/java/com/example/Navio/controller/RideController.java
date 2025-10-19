@@ -1,6 +1,7 @@
 package com.example.Navio.controller;
 
 import com.example.Navio.auth.AuthTokenGen;
+import com.example.Navio.config.NearestDriverStrategy;
 import com.example.Navio.dto.RideRequestDto;
 import com.example.Navio.interfaces.DriverMatchingStrategy;
 import com.example.Navio.model.Driver;
@@ -36,6 +37,9 @@ public class RideController {
 
     @Autowired
     private DriverMatchingStrategy driverMatchingStrategy;
+
+    @Autowired
+    private NearestDriverStrategy strategy;
 
     @GetMapping("/dashboard")
     public String rideDashboard(HttpServletRequest request, Model model) {
@@ -76,6 +80,13 @@ public class RideController {
         List<Driver> nearByDriver = availableDrivers.stream()
                 .filter(d -> d.getCurrentLocation().equalsIgnoreCase(rideRequestDto.getPickUpLocation()))
                 .toList();
+
+//        for(Driver d : availableDrivers) {
+//            double distance = strategy.haversine(riderLat, riderLon, d.getLatitude(), d.getLongitude());
+//            if(distance <= 5.0) {
+//                nearByDriver.add(d);
+//            }
+//        }                         // Add this function to find the nearest driver
 
         if(nearByDriver.isEmpty()) {
             nearByDriver = availableDrivers;
