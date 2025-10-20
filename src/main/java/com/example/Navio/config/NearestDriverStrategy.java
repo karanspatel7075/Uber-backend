@@ -11,6 +11,10 @@ import java.util.List;
 @Component
 public class NearestDriverStrategy implements DriverMatchingStrategy {
 
+//    GeoHash → Fast filtering
+//    Haversine → Exact distance
+//    We will add the Geohashing login afterward at large scale data
+
     @Override
     public Driver findDriver(List<Driver> availableDriver, RideRequestDto rideRequestDto) {
         if(availableDriver.isEmpty()) {

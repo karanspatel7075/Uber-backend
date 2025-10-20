@@ -49,6 +49,8 @@ public class DriverServiceImple {
         driver.setCurrentLocation(driverDto.getCurrentLocation());
         driver.setVehicleId(driverDto.getVehicleId());
         driver.setStatus("Pending");
+        driver.setPhoneNumber(user.getPhone());
+        driver.setName(user.getName());
         driver.setRating(0.0);
         driver.setAvailable(false);
         driverRepository.save(driver);

@@ -22,6 +22,8 @@ public class Driver {
     private Double rating;
     private String vehicleId;
     private String status;
+    private String name;
+    private Long phoneNumber;
 
     // Store uploaded file path or URL
     private String img;

@@ -8,9 +8,11 @@ import com.example.Navio.model.Ride;
 import com.example.Navio.model.User;
 import com.example.Navio.repository.DriverRepository;
 import com.example.Navio.repository.RideRepository;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,6 +31,9 @@ public class RideRequestServiceImple {
     @Autowired
     private  DriverServiceImple driverServiceImple;
 
+    @Autowired
+    private NotificationServiceImple notificationServiceImple;
+
     private double[] getCoordinates(String city) {
         return switch (city.toLowerCase()) {
             case "vapi" -> new double[]{20.3710, 72.9043};
@@ -41,7 +46,7 @@ public class RideRequestServiceImple {
     }
 
 //    1. Request Ride
-    public void requestRide(Long driverId, RideRequestDto dto, User user) {
+    public void requestRide(Long driverId, RideRequestDto dto, User user) throws MessagingException, UnsupportedEncodingException {
         Ride ride = new Ride();
         Driver driver = driverRepository.findById(driverId).orElseThrow();
         ride.setDriverId(driverId);
@@ -60,6 +65,23 @@ public class RideRequestServiceImple {
 
         ride.setStatus("Matched");
         ride.setFare(driverServiceImple.calculateFare(50));
+
+        System.out.println("User: " + user.getName());
+        System.out.println("Driver: " + driver.getName());
+        System.out.println("Pickup: " + dto.getPickUpLocation());
+        System.out.println("Drop: " + dto.getDropLocation());
+        System.out.println("Email: " + user.getEmail());
+        System.out.println("Driver Phone: " + driver.getPhoneNumber());
+
+
+        try {
+            notificationServiceImple.sendConfirmationMail(driver, dto, user, ride.getFare());
+            System.out.println("The mail has been sent to respective User");
+        }
+        catch (Exception e) {
+            System.out.println(("Failed to send the email " + e.getMessage()));
+            e.printStackTrace();
+        }
 
         driver.setAvailable(false);
         driverRepository.save(driver);

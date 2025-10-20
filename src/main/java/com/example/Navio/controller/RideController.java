@@ -10,6 +10,7 @@ import com.example.Navio.model.User;
 import com.example.Navio.repository.DriverRepository;
 import com.example.Navio.repository.UserRepository;
 import com.example.Navio.service.RideRequestServiceImple;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -17,6 +18,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 @Controller
@@ -59,7 +61,7 @@ public class RideController {
     }
 
     @PostMapping("/selectDriver")
-    public String requestRide(@ModelAttribute RideRequestDto dto, @RequestParam Long driverId, HttpServletRequest request, Model model, RedirectAttributes redirectAttributes) {
+    public String requestRide(@ModelAttribute RideRequestDto dto, @RequestParam Long driverId, HttpServletRequest request, Model model, RedirectAttributes redirectAttributes) throws MessagingException, UnsupportedEncodingException {
         String token = (String) request.getSession().getAttribute("jwtToken");
         String email = authTokenGen.getUsernameFromToken(token);
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("No user found"));
