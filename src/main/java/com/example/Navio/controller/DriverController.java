@@ -3,7 +3,10 @@ package com.example.Navio.controller;
 import com.example.Navio.auth.AuthTokenGen;
 import com.example.Navio.dto.DriverRequestDto;
 import com.example.Navio.model.Driver;
+import com.example.Navio.model.Ride;
 import com.example.Navio.model.User;
+import com.example.Navio.repository.DriverRepository;
+import com.example.Navio.repository.RideRepository;
 import com.example.Navio.repository.UserRepository;
 import com.example.Navio.service.DriverServiceImple;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
+import java.util.List;
 
 @Controller
 @RequestMapping("/driver")
@@ -23,15 +27,22 @@ public class DriverController {
     private AuthTokenGen authTokenGen;
 
     @Autowired
+    private DriverRepository driverRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private DriverServiceImple driverServiceImple;
 
+    @Autowired
+    private RideRepository rideRepository;
 
     @GetMapping("/dashboard")
     public String dashboard(HttpServletRequest request, Model model) {
         Driver driver = driverServiceImple.findDriverByUser(request);
+        List<Ride> listOfRides = rideRepository.findByStatus("Requested");
+        model.addAttribute("rides", listOfRides);
         model.addAttribute("driver", driver);
         return "driver/dashboard"; // driver/dashboard.html
     }
@@ -52,8 +63,17 @@ public class DriverController {
     }
 
     @PostMapping("/acceptRide")
-    public String acceptRide(@RequestParam Long driverId, @RequestParam Long rideId,  RedirectAttributes redirectAttributes) {
-        String message = driverServiceImple.acceptRide(driverId, rideId);
+    public String acceptRide(HttpServletRequest request, @RequestParam Long rideId,  RedirectAttributes redirectAttributes) {
+        // Get logged-in driver
+        String token = (String) request.getSession().getAttribute("jwtToken");
+        String email = authTokenGen.getUsernameFromToken(token);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Driver not found"));
+
+        Driver driver = driverRepository.findByUserId(user.getId());
+
+        // Call the service
+        String message = driverServiceImple.acceptRide(driver.getId(), rideId);
         redirectAttributes.addFlashAttribute("message", message);
         return "redirect:/driver/dashboard";
     }

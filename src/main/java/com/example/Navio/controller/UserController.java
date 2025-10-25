@@ -46,14 +46,14 @@ public class UserController {
         return "/index";
     }
 
-    @ModelAttribute
-    public void populateUser(Principal principal, Model model) {
-        if(principal != null) {
-            String email = principal.getName();
-            User user = userRepository.findByEmail(email).orElse(null);
-            model.addAttribute("user", user);
-        }
-    }
+//    @ModelAttribute
+//    public void populateUser(Principal principal, Model model) {
+//        if(principal != null) {
+//            String email = principal.getName();
+//            User user = userRepository.findByEmail(email).orElse(null);
+//            model.addAttribute("user", user);
+//        }
+//    }
 
     @GetMapping("/login")
     public String login(Model model) {

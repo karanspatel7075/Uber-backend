@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -98,29 +99,24 @@ public class DriverServiceImple {
     }
 
     public String startRide(Long rideId) {
-        Optional<Ride> rideOpt = rideRepository.findById(rideId);
-        if(rideOpt.isPresent()) {
-            Ride ride = rideOpt.get();
-            ride.setStatus("Ongoing");
-            rideRepository.save(ride);
-            return "Ride started!";
-        }
-
-        return "Ride not found!";
+        Ride ride = rideRepository.findById(rideId).orElseThrow(() -> new RuntimeException("Ride not found"));
+        ride.setStatus("Ongoing");
+        ride.setStartTime(LocalDateTime.now());
+        rideRepository.save(ride);
+        return "Ride started successfully";
     }
 
     public String endRide(Long rideId, double distanceCovered) {
-        Optional<Ride> rideOpt = rideRepository.findById(rideId);
-        if(rideOpt.isPresent()) {
-            Ride ride = rideOpt.get();
-            ride.setStatus("Completed");
-            double fare = calculateFare(distanceCovered);
-            ride.setFare(fare);
-            rideRepository.save(ride);
-            return "Ride completed! Fare: ₹" + fare;
-        }
+        Ride ride = rideRepository.findById(rideId).orElseThrow(() -> new RuntimeException("Ride not found"));
+        ride.setStatus("Completed");
+        ride.setEndTime(LocalDateTime.now());
 
-        return  "Ride not found!";
+        double fare = calculateFare(distanceCovered);
+
+        //update wallet
+
+        rideRepository.save(ride);
+        return "Ride completed successfully! Fare: ₹" + fare;
     }
 
     public double calculateFare(double distanceCovered) {
@@ -128,6 +124,22 @@ public class DriverServiceImple {
         double perKmRate = 15.00;
         return baseFare + (perKmRate * distanceCovered);
     }
+
+    private void updateWallet(Long riderId, Long driverId,double fare) {
+        User rider = userRepository.findById(riderId).orElseThrow(() -> new RuntimeException("Rider not found"));
+        Driver driver = driverRepository.findById(driverId).orElseThrow(() -> new RuntimeException("Driver not found"));
+
+        rider.setWalletBalance(rider.getWalletBalance() - fare);
+        driver.setWalletBalance(driver.getWalletBalance() + fare);
+
+        userRepository.save(rider);
+        driverRepository.save(driver);
+    }
+
+    public List<Ride> getHistory(Long riderId) {
+        return rideRepository.findByRiderId(riderId);
+    }
+
 
     public void updateDriverLocation(Long driverId, String location) {
         Driver driver = driverRepository.findById(driverId).orElseThrow();

@@ -24,6 +24,7 @@ public class Driver {
     private String status;
     private String name;
     private Long phoneNumber;
+    private double walletBalance;
 
     // Store uploaded file path or URL
     private String img;

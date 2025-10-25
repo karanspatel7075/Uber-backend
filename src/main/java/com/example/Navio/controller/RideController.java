@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -49,8 +50,17 @@ public class RideController {
         String email = authTokenGen.getUsernameFromToken(token);
 
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+
         List<Ride> rides = rideRequestServiceImple.getAllRiders(user.getId());
+        if (rides == null) {
+            rides = new ArrayList<>();
+        }
         model.addAttribute("rides", rides);
+
+        System.out.println("Fetched rides for user " + user.getId() + " → " + rides.size());
+        model.addAttribute("rides", rides);
+        System.out.println("✅ Rendering dashboard for: " + user.getEmail());
+
         return "rider/dashboard";
     }
 

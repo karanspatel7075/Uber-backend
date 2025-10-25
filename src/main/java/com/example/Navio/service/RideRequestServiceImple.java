@@ -63,25 +63,22 @@ public class RideRequestServiceImple {
         ride.setDropLatitude(dropCoords[0]);
         ride.setDropLongitude(dropCoords[1]);
 
-        ride.setStatus("Matched");
+        ride.setStatus("Requested");
         ride.setFare(driverServiceImple.calculateFare(50));
-
-        System.out.println("User: " + user.getName());
-        System.out.println("Driver: " + driver.getName());
+        System.out.println("Driver: " + user.getName());
         System.out.println("Pickup: " + dto.getPickUpLocation());
         System.out.println("Drop: " + dto.getDropLocation());
         System.out.println("Email: " + user.getEmail());
-        System.out.println("Driver Phone: " + driver.getPhoneNumber());
+        System.out.println("Driver Phone: " + user.getPhone());
 
-
-        try {
-            notificationServiceImple.sendConfirmationMail(driver, dto, user, ride.getFare());
-            System.out.println("The mail has been sent to respective User");
-        }
-        catch (Exception e) {
-            System.out.println(("Failed to send the email " + e.getMessage()));
-            e.printStackTrace();
-        }
+//        try {
+//            notificationServiceImple.sendConfirmationMail(driver, dto, user, ride.getFare());
+//            System.out.println("The mail has been sent to respective User");
+//        }
+//        catch (Exception e) {
+//            System.out.println(("Failed to send the email " + e.getMessage()));
+//            e.printStackTrace();
+//        }
 
         driver.setAvailable(false);
         driverRepository.save(driver);
@@ -110,4 +107,6 @@ public class RideRequestServiceImple {
         }
         return "Ride not found";
     }
+
+
 }

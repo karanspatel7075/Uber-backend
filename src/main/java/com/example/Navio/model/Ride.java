@@ -33,6 +33,10 @@ public class Ride {
     private double dropLongitude;
 
     private LocalDateTime requestedTime;
+
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
+
     private String status; // Requested, Accepted, Ongoing, Completed
     private Double fare;
     private Double rating;

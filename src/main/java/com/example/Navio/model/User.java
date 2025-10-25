@@ -25,7 +25,7 @@ public class User implements UserDetails {
     private String email;
     private String password;
     private Long phone;
-    private long walletBalance;
+    private double walletBalance = 500.0; // default initial balance
 
     // Store uploaded file path or URL
     private String img;
