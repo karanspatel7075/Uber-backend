@@ -14,7 +14,11 @@ public class Driver {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long userId; // foreign key to User table
+//    private Long userId; // foreign key to User table
+
+    @OneToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private User user;
 
     @Column(name = "is_available")
     private boolean available;

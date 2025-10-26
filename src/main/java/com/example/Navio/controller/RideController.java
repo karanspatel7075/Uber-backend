@@ -55,7 +55,6 @@ public class RideController {
         if (rides == null) {
             rides = new ArrayList<>();
         }
-        model.addAttribute("rides", rides);
 
         System.out.println("Fetched rides for user " + user.getId() + " → " + rides.size());
         model.addAttribute("rides", rides);

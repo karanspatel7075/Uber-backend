@@ -9,6 +9,7 @@ import com.example.Navio.model.User;
 import com.example.Navio.repository.DriverRepository;
 import com.example.Navio.repository.RideRepository;
 import jakarta.mail.MessagingException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Slf4j
 public class RideRequestServiceImple {
 
     @Autowired
@@ -65,10 +67,11 @@ public class RideRequestServiceImple {
 
         ride.setStatus("Requested");
         ride.setFare(driverServiceImple.calculateFare(50));
-        System.out.println("Driver: " + user.getName());
+        System.out.println("Rider: " + user.getName());
+        System.out.println("Driver: " + driver.getName());
         System.out.println("Pickup: " + dto.getPickUpLocation());
         System.out.println("Drop: " + dto.getDropLocation());
-        System.out.println("Email: " + user.getEmail());
+        log.info("Ride requested by {}", user.getEmail());
         System.out.println("Driver Phone: " + user.getPhone());
 
 //        try {
@@ -85,8 +88,8 @@ public class RideRequestServiceImple {
         rideRepository.save(ride);
     }
 
-    public String cancelRide(Long riderId) {
-        Ride ride = rideRepository.findById(riderId).orElse(null);
+    public String cancelRide(Long rideId) {
+        Ride ride = rideRepository.findById(rideId).orElse(null);
         assert ride != null;
         ride.setStatus("Cancelled");
         rideRepository.save(ride);
@@ -97,8 +100,8 @@ public class RideRequestServiceImple {
         return rideRepository.findByRiderId(riderId);
     }
 
-    public String rateDriver(Long riderId, Double rating) {
-        Ride ride = rideRepository.findById(riderId).orElse(null);
+    public String rateDriver(Long rideId, Double rating) {
+        Ride ride = rideRepository.findById(rideId).orElse(null);
         if(ride != null) {
 //            ride.setStatus("Completed");  This Status update has to be done by Driver
             ride.setRating(rating);

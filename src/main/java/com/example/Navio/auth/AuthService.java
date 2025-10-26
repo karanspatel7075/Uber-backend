@@ -72,14 +72,17 @@ public class AuthService {
                 .role(Role.USER)   // default role
                 .build();
 
-        userRepository.save(user);
+
 
         Wallet wallet = Wallet.builder()
-                .userId(user.getId())
-                .balance(0.0)
+                .user(user)
+                .balance(500.0)
                 .build();
 
         walletRepository.save(wallet);
+
+        // Saving user will automatically save wallet due to CascadeType.ALL
+        userRepository.save(user);
 
         return RegisterResponseDto.builder()
                 .name(user.getName())

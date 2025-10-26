@@ -29,6 +29,8 @@
         <p>No ride requests available at the moment.</p>
       </div>
 
+      <meta http-equiv="refresh" content="30"> <!-- Refresh every 30 sec -->
+
       <!-- Ride Table -->
       <div th:if="${!#lists.isEmpty(rides)}" class="table-responsive">
         <table class="table table-bordered table-hover align-middle text-center">
@@ -63,6 +65,7 @@
             <td th:text="${ride.endTime != null ? #temporals.format(ride.endTime, 'dd-MM-yyyy HH:mm') : '-'}"></td>
 
             <td>
+
               <!-- Accept Ride -->
               <form th:if="${ride.status == 'Requested'}"
                     th:action="@{/driver/acceptRide}" method="post" style="display:inline;">

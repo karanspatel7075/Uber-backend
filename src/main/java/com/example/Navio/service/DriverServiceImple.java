@@ -5,10 +5,12 @@ import com.example.Navio.dto.DriverRequestDto;
 import com.example.Navio.model.Driver;
 import com.example.Navio.model.Ride;
 import com.example.Navio.model.User;
+import com.example.Navio.model.Wallet;
 import com.example.Navio.model.enums.Role;
 import com.example.Navio.repository.DriverRepository;
 import com.example.Navio.repository.RideRepository;
 import com.example.Navio.repository.UserRepository;
+import com.example.Navio.repository.WalletRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,6 +35,9 @@ public class DriverServiceImple {
     @Autowired
     private AuthTokenGen authTokenGen;
 
+    @Autowired
+    private WalletRepository walletRepository;
+
     private double[] getCoordinates(String city) {
         return switch (city.toLowerCase()) {
             case "vapi" -> new double[]{20.3710, 72.9043};
@@ -46,7 +51,8 @@ public class DriverServiceImple {
 
     public Driver applyForDriver(DriverRequestDto driverDto, User user) {
         Driver driver = new Driver();
-        driver.setUserId(user.getId());
+//        driver.setUserId(user.getId());
+        driver.setUser(user); // link the user entity directly
         driver.setCurrentLocation(driverDto.getCurrentLocation());
         driver.setVehicleId(driverDto.getVehicleId());
         driver.setStatus("Pending");
@@ -69,7 +75,8 @@ public class DriverServiceImple {
         driverRepository.save(driver);
 
 //      That’s wrong — driver.getId() is driver table’s ID, not user’s.
-        User user = userRepository.findById(driver.getUserId()).orElseThrow(() -> new RuntimeException("User not found"));
+//        User user = userRepository.findById(driver.getUserId()).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = driver.getUser(); // directly get the linked user
         user.setRole(Role.DRIVER);
         userRepository.save(user);
     }
@@ -90,7 +97,7 @@ public class DriverServiceImple {
         if(rideOpt.isPresent()) {
             Ride ride = rideOpt.get();
             ride.setStatus("Accepted");
-            ride.setRiderId(driverId);
+            ride.setDriverId(driverId);
             rideRepository.save(ride);
             return "Ride is accepted Successfully";
         }
@@ -114,13 +121,14 @@ public class DriverServiceImple {
         double fare = calculateFare(distanceCovered);
 
         //update wallet
+        updateWallet(ride.getRiderId(), ride.getDriverId(), fare);
 
         rideRepository.save(ride);
         return "Ride completed successfully! Fare: ₹" + fare;
     }
 
     public double calculateFare(double distanceCovered) {
-        double baseFare = 50.00;
+        double baseFare = 40.00;
         double perKmRate = 15.00;
         return baseFare + (perKmRate * distanceCovered);
     }
@@ -129,11 +137,24 @@ public class DriverServiceImple {
         User rider = userRepository.findById(riderId).orElseThrow(() -> new RuntimeException("Rider not found"));
         Driver driver = driverRepository.findById(driverId).orElseThrow(() -> new RuntimeException("Driver not found"));
 
-        rider.setWalletBalance(rider.getWalletBalance() - fare);
-        driver.setWalletBalance(driver.getWalletBalance() + fare);
+        Wallet riderWallet = rider.getWallet();
+        Wallet driverWallet = driver.getUser().getWallet(); // because Driver has User reference
 
-        userRepository.save(rider);
-        driverRepository.save(driver);
+        if (riderWallet == null || driverWallet == null) {
+            throw new RuntimeException("Wallet not found for rider or driver");
+        }
+
+        // Update balances
+        riderWallet.setBalance(riderWallet.getBalance() - fare);
+        driverWallet.setBalance(driverWallet.getBalance() + fare);
+
+        // Optionally add transaction history
+        riderWallet.getTransactionHistory().add("Debited ₹" + fare + " for ride payment.");
+        driverWallet.getTransactionHistory().add("Credited ₹" + fare + " from completed ride.");
+
+        // Save wallets
+        walletRepository.save(riderWallet);
+        walletRepository.save(driverWallet);
     }
 
     public List<Ride> getHistory(Long riderId) {

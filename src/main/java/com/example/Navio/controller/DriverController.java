@@ -75,23 +75,29 @@ public class DriverController {
         // Call the service
         String message = driverServiceImple.acceptRide(driver.getId(), rideId);
         redirectAttributes.addFlashAttribute("message", message);
-        return "redirect:/driver/dashboard";
+        return "redirect:/driver/ride/" + rideId;
     }
 
-    @PostMapping("/startRide")
-    public String startRide(@RequestParam Long rideId, RedirectAttributes redirectAttributes) {
+    @GetMapping("/ride/{rideId}")
+    public String rideDetails(@PathVariable Long rideId, Model model) {
+        Ride ride = rideRepository.findById(rideId).orElse(null);
+        model.addAttribute("ride", ride);
+        return "driver/rideDetails";
+    }
+
+    @PostMapping("/startRide/{rideId}")
+    public String startRide(@PathVariable Long rideId, RedirectAttributes redirectAttributes) {
         String message = driverServiceImple.startRide(rideId);
         redirectAttributes.addFlashAttribute("message", message);
-        return "redirect:/driver/dashboard";
+        return "redirect:/driver/ride/" + rideId;
     }
 
-    @PostMapping("/endRide")
-    public String endRide(@RequestParam Long rideId, @RequestParam Double distance, RedirectAttributes redirectAttributes) {
+    @PostMapping("/endRide/{rideId}")
+    public String endRide(@PathVariable Long rideId, @RequestParam Double distance, RedirectAttributes redirectAttributes) {
         String message = driverServiceImple.endRide(rideId, distance);
         redirectAttributes.addFlashAttribute("message", message);
-        return "redirect:/driver/dashboard";
+        return "redirect:/driver/ride/" + rideId;
     }
-
 
     @PostMapping("/updateLocation")
     public String updateLocation(@RequestParam Long driverId, @RequestParam String location, RedirectAttributes redirectAttributes) {
