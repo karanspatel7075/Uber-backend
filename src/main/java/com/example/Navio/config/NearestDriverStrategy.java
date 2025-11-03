@@ -3,33 +3,48 @@ package com.example.Navio.config;
 import com.example.Navio.dto.RideRequestDto;
 import com.example.Navio.interfaces.DriverMatchingStrategy;
 import com.example.Navio.model.Driver;
+import com.example.Navio.repository.DriverRepository;
+import com.example.Navio.service.GeoService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.Comparator;
 import java.util.List;
 
 @Component
 public class NearestDriverStrategy implements DriverMatchingStrategy {
+
+    @Autowired
+    private GeoService geoService;
+
+    @Autowired
+    private DriverRepository driverRepository;
 
 //    GeoHash → Fast filtering
 //    Haversine → Exact distance
 //    We will add the Geohashing login afterward at large scale data
 
     @Override
-    public Driver findDriver(List<Driver> availableDriver, RideRequestDto rideRequestDto) {
+    public List<Driver> findDriver(List<Driver> availableDriver, RideRequestDto rideRequestDto) {
         if(availableDriver.isEmpty()) {
             return  null;
         }
 
+        // Step 1: Convert pickup city name to coordinates
         double[] pickupCoords = getCoordinates(rideRequestDto.getPickUpLocation());
-        double riderLat = pickupCoords[0];
-        double riderLon = pickupCoords[1];
+        double lat = pickupCoords[0];
+        double lon = pickupCoords[1];
 
-        return availableDriver.stream()
-                .min(Comparator.comparing(
-                        driver -> haversine(riderLat, riderLon, driver.getLatitude(), driver.getLongitude())
-                ))
-                .orElse(null);
+        // Step 2: Ask Redis to find drivers within 5km radius
+        List<String> nearbyDriverIds = geoService.findNearByDrivers(lat, lon, 5.0);
+
+        // Step 3: If Redis returns nothing, fallback to all available drivers
+        if(nearbyDriverIds.isEmpty()) {
+            return  driverRepository.findByAvailableTrue();
+        }
+
+        // Step 4: Convert IDs → Full Driver entities from DB
+        return driverRepository.findAllById(
+                nearbyDriverIds.stream().map(Long::parseLong).toList()
+        );
     }
 
     private double[] getCoordinates(String city) {

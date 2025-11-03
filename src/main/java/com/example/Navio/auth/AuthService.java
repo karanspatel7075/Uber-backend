@@ -79,9 +79,12 @@ public class AuthService {
                 .balance(500.0)
                 .build();
 
-        walletRepository.save(wallet);
+        // Link both
+        user.setWallet(wallet); // IMPORTANT: sets both sides
+        // wallet.setUser(user); <- not needed, handled in setWallet
 
         // Saving user will automatically save wallet due to CascadeType.ALL
+        // Save only the user (CascadeType.ALL will save wallet automatically)
         userRepository.save(user);
 
         return RegisterResponseDto.builder()

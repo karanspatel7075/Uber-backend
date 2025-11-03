@@ -1,6 +1,5 @@
 package com.example.Navio.model;
 
-import com.example.Navio.model.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,7 +22,7 @@ public class Driver {
     @Column(name = "is_available")
     private boolean available;
     private String currentLocation;
-    private Double rating;
+    private Double rating = 0.0;
     private String vehicleId;
     private String status;
     private String name;
@@ -35,6 +34,9 @@ public class Driver {
 
     private double longitude;
     private double latitude;
+
+    @Column(nullable = false)
+    private Double totalRatings = 0.0;
 
 }
 

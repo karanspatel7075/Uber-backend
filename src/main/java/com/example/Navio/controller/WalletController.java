@@ -16,6 +16,8 @@ import java.security.Principal;
 @RequestMapping("/wallet")
 public class WalletController {
 
+//    Your WalletController provides manual wallet management — like viewing balance, adding funds, or debiting money by user action.
+
     private final WalletService walletService;
     private final UserRepository userRepository;
     private final AuthTokenGen authTokenGen;

@@ -40,6 +40,14 @@
                  placeholder="Distance (km)" required class="form-control d-inline-block w-auto me-2">
           <button type="submit" class="btn btn-success px-4">End Ride</button>
         </form>
+
+        <form th:if="${ride.status == 'Completed'}"
+              th:action="@{/driver/updateLocation}" method="post" class="d-inline">
+          <input type="hidden" name="rideId" th:value="${ride.id}">
+          <input type="hidden" name="dropLocation" th:value="${ride.dropLocation}">
+          <button type="submit" class="btn btn-success px-4">End Ride</button>
+        </form>
+
       </div>
     </div>
   </div>

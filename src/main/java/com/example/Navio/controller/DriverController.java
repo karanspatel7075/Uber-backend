@@ -55,11 +55,19 @@ public class DriverController {
 
     @PostMapping("/applyForm")
     public String applyForDriver(@ModelAttribute("driverRequestDto") DriverRequestDto dto, HttpServletRequest request, Model model) {
-        String token = (String) request.getSession().getAttribute("jwtToken");
-        String email = authTokenGen.getUsernameFromToken(token);
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
-        driverServiceImple.applyForDriver(dto, user);
-        return "redirect:/driver/dashboard";
+        try {
+            String token = (String) request.getSession().getAttribute("jwtToken");
+            String email = authTokenGen.getUsernameFromToken(token);
+            User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+
+            driverServiceImple.applyForDriver(dto, user);
+            return "redirect:/driver/dashboard";
+        } catch (Exception e) {
+            // You can log it and show a custom error message on the same page
+            model.addAttribute("error", e.getMessage());
+            e.printStackTrace();
+            return "errorPage"; // You can create errorPage.html or use driver/apply again
+        }
     }
 
     @PostMapping("/acceptRide")
@@ -100,8 +108,8 @@ public class DriverController {
     }
 
     @PostMapping("/updateLocation")
-    public String updateLocation(@RequestParam Long driverId, @RequestParam String location, RedirectAttributes redirectAttributes) {
-        driverServiceImple.updateDriverLocation(driverId, location);
+    public String updateLocation(@RequestParam Long rideId, @RequestParam("dropLocation") String location, RedirectAttributes redirectAttributes) {
+        driverServiceImple.updateDriverLocation(rideId, location);
         redirectAttributes.addFlashAttribute("message", "Successfully Updated");
         return "redirect:/driver/dashboard";
     }

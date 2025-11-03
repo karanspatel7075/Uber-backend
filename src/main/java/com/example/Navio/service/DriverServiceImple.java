@@ -1,7 +1,10 @@
 package com.example.Navio.service;
 
 import com.example.Navio.auth.AuthTokenGen;
+import com.example.Navio.config.CityCoordinatesService;
+import com.example.Navio.config.NearestDriverStrategy;
 import com.example.Navio.dto.DriverRequestDto;
+import com.example.Navio.dto.RideRequestDto;
 import com.example.Navio.model.Driver;
 import com.example.Navio.model.Ride;
 import com.example.Navio.model.User;
@@ -14,8 +17,8 @@ import com.example.Navio.repository.WalletRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +41,15 @@ public class DriverServiceImple {
     @Autowired
     private WalletRepository walletRepository;
 
+    @Autowired
+    private NearestDriverStrategy nearestDriverStrategy;
+
+    @Autowired
+    private GeoService geoService;
+
+    @Autowired
+    private CityCoordinatesService cityCoordinatesService;
+
     private double[] getCoordinates(String city) {
         return switch (city.toLowerCase()) {
             case "vapi" -> new double[]{20.3710, 72.9043};
@@ -49,7 +61,7 @@ public class DriverServiceImple {
         };
     }
 
-    public Driver applyForDriver(DriverRequestDto driverDto, User user) {
+    public void applyForDriver(DriverRequestDto driverDto, User user) {
         Driver driver = new Driver();
 //        driver.setUserId(user.getId());
         driver.setUser(user); // link the user entity directly
@@ -60,8 +72,15 @@ public class DriverServiceImple {
         driver.setName(user.getName());
         driver.setRating(0.0);
         driver.setAvailable(false);
+
+//        double[] coords = getCoordinates(driverDto.getCurrentLocation());
+
+        // ✅ Use JSON-based coordinates
+        double[] coords = cityCoordinatesService.getCoordinates(driverDto.getCurrentLocation());
+        driver.setLatitude(coords[0]);
+        driver.setLongitude(coords[1]);
+
         driverRepository.save(driver);
-        return driver;
     }
 
     public List<Driver> getPendingDriver() {
@@ -79,6 +98,14 @@ public class DriverServiceImple {
         User user = driver.getUser(); // directly get the linked user
         user.setRole(Role.DRIVER);
         userRepository.save(user);
+    }
+
+    public List<Driver> findNearbyDrivers(RideRequestDto rideRequestDto) {
+        // Step 1: Get all available drivers
+        List<Driver> availableDrivers = driverRepository.findByAvailableTrue();
+
+        // Step 2: Delegate actual matching logic to strategy
+        return  nearestDriverStrategy.findDriver(availableDrivers, rideRequestDto);
     }
 
     public Driver findDriverByUser(HttpServletRequest request) {
@@ -116,23 +143,28 @@ public class DriverServiceImple {
     public String endRide(Long rideId, double distanceCovered) {
         Ride ride = rideRepository.findById(rideId).orElseThrow(() -> new RuntimeException("Ride not found"));
         ride.setStatus("Completed");
+        Driver driver = driverRepository.findById(ride.getDriverId()).orElseThrow(() -> new RuntimeException("Driver not found"));
+        driver.setAvailable(true);
         ride.setEndTime(LocalDateTime.now());
 
         double fare = calculateFare(distanceCovered);
+        ride.setFare(fare);
 
         //update wallet
         updateWallet(ride.getRiderId(), ride.getDriverId(), fare);
 
         rideRepository.save(ride);
+        driverRepository.save(driver);
         return "Ride completed successfully! Fare: ₹" + fare;
     }
 
     public double calculateFare(double distanceCovered) {
-        double baseFare = 40.00;
-        double perKmRate = 15.00;
+        double baseFare = 30.00;
+        double perKmRate = 10.00;
         return baseFare + (perKmRate * distanceCovered);
     }
 
+    @Transactional
     private void updateWallet(Long riderId, Long driverId,double fare) {
         User rider = userRepository.findById(riderId).orElseThrow(() -> new RuntimeException("Rider not found"));
         Driver driver = driverRepository.findById(driverId).orElseThrow(() -> new RuntimeException("Driver not found"));
@@ -153,21 +185,29 @@ public class DriverServiceImple {
         driverWallet.getTransactionHistory().add("Credited ₹" + fare + " from completed ride.");
 
         // Save wallets
-        walletRepository.save(riderWallet);
-        walletRepository.save(driverWallet);
+        walletRepository.saveAndFlush(riderWallet);
+        walletRepository.saveAndFlush(driverWallet);
     }
 
     public List<Ride> getHistory(Long riderId) {
         return rideRepository.findByRiderId(riderId);
     }
 
+    public void updateDriverLocation(Long rideId, String location) {
+        Ride ride = rideRepository.findById(rideId).orElseThrow(() -> new RuntimeException("Ride is not found"));
+        Driver driver = driverRepository.findById(ride.getDriverId()).orElseThrow();
 
-    public void updateDriverLocation(Long driverId, String location) {
-        Driver driver = driverRepository.findById(driverId).orElseThrow();
         double[] coords = getCoordinates(location);
         driver.setLatitude(coords[0]);
         driver.setLongitude(coords[1]);
         driver.setCurrentLocation(location);
+
+        // Save in DB
         driverRepository.save(driver);
+
+        // Save in Redis Geo
+        geoService.addDriverLocation(driver.getId(), coords[0], coords[1]);
     }
+
+
 }

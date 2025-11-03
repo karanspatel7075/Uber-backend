@@ -9,6 +9,8 @@ import com.example.Navio.model.Ride;
 import com.example.Navio.model.User;
 import com.example.Navio.repository.DriverRepository;
 import com.example.Navio.repository.UserRepository;
+import com.example.Navio.service.DriverServiceImple;
+import com.example.Navio.service.GeoService;
 import com.example.Navio.service.RideRequestServiceImple;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,6 +45,12 @@ public class RideController {
 
     @Autowired
     private NearestDriverStrategy strategy;
+
+    @Autowired
+    private GeoService geoService;
+
+    @Autowired
+    private DriverServiceImple driverServiceImple;
 
     @GetMapping("/dashboard")
     public String rideDashboard(HttpServletRequest request, Model model) {
@@ -86,11 +94,12 @@ public class RideController {
         String email = authTokenGen.getUsernameFromToken(token);
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<Driver> availableDrivers = driverRepository.findByAvailableTrue();
-
+        List<Driver> availableDrivers = driverRepository.findByAvailableTrue();/*
         List<Driver> nearByDriver = availableDrivers.stream()
                 .filter(d -> d.getCurrentLocation().equalsIgnoreCase(rideRequestDto.getPickUpLocation()))
-                .toList();
+                .toList();*/
+
+        List<Driver> nearbyDrivers = driverServiceImple.findNearbyDrivers(rideRequestDto);
 
 //        for(Driver d : availableDrivers) {
 //            double distance = strategy.haversine(riderLat, riderLon, d.getLatitude(), d.getLongitude());
@@ -99,12 +108,8 @@ public class RideController {
 //            }
 //        }                         // Add this function to find the nearest driver
 
-        if(nearByDriver.isEmpty()) {
-            nearByDriver = availableDrivers;
-        }
-
         model.addAttribute("dto", rideRequestDto);
-        model.addAttribute("drivers", nearByDriver);
+        model.addAttribute("drivers", nearbyDrivers);
         return "rider/selectDriver";
     }
 

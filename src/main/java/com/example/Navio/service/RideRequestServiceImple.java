@@ -12,6 +12,8 @@ import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
@@ -74,14 +76,14 @@ public class RideRequestServiceImple {
         log.info("Ride requested by {}", user.getEmail());
         System.out.println("Driver Phone: " + user.getPhone());
 
-//        try {
-//            notificationServiceImple.sendConfirmationMail(driver, dto, user, ride.getFare());
-//            System.out.println("The mail has been sent to respective User");
-//        }
-//        catch (Exception e) {
-//            System.out.println(("Failed to send the email " + e.getMessage()));
-//            e.printStackTrace();
-//        }
+        try {
+            notificationServiceImple.sendConfirmationMail(driver, dto, user, ride.getFare());
+            System.out.println("The mail has been sent to respective User");
+        }
+        catch (Exception e) {
+            System.out.println(("Failed to send the email " + e.getMessage()));
+            e.printStackTrace();
+        }
 
         driver.setAvailable(false);
         driverRepository.save(driver);
@@ -102,14 +104,26 @@ public class RideRequestServiceImple {
 
     public String rateDriver(Long rideId, Double rating) {
         Ride ride = rideRepository.findById(rideId).orElse(null);
-        if(ride != null) {
-//            ride.setStatus("Completed");  This Status update has to be done by Driver
-            ride.setRating(rating);
-            rideRepository.save(ride);
-            return "Driver rated successfully!";
+        if(ride == null) {
+            return "Ride not found";
         }
-        return "Ride not found";
+        // Mark ride as rated
+        ride.setRating(rating);
+        rideRepository.save(ride);
+
+        Driver driver = driverRepository.findById(ride.getDriverId())
+                .orElseThrow(() -> new RuntimeException("Driver not found"));
+
+        // Update driver's average rating
+        double oldRating = driver.getRating() != null ? driver.getRating() : 0.0;
+        double totalRatings = driver.getTotalRatings() != null ? driver.getTotalRatings() : 0;
+
+        double newAverage = ((oldRating * totalRatings) + rating) / (totalRatings + 1);
+
+        driver.setRating(newAverage);
+        driver.setTotalRatings(totalRatings + 1);
+
+        driverRepository.save(driver);
+        return "Driver rated successfully!";
     }
-
-
 }

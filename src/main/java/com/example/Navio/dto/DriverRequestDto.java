@@ -10,6 +10,8 @@ import lombok.*;
 public class DriverRequestDto {
     private String currentLocation;
     private String vehicleId;
+    private String latitude;
+    private String longitude;
 }
 
 // That’s a bit too detailed for an “apply for driver” form.
