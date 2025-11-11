@@ -7,6 +7,8 @@ import com.example.Navio.repository.DriverRepository;
 import com.example.Navio.service.GeoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -24,14 +26,17 @@ public class NearestDriverStrategy implements DriverMatchingStrategy {
 
     @Override
     public List<Driver> findDriver(List<Driver> availableDriver, RideRequestDto rideRequestDto) {
-        if(availableDriver.isEmpty()) {
-            return  null;
+        if (availableDriver == null || availableDriver.isEmpty()) {
+            System.out.println("⚠️ No available drivers found in DB.");
+            return Collections.emptyList();
         }
 
         // Step 1: Convert pickup city name to coordinates
         double[] pickupCoords = getCoordinates(rideRequestDto.getPickUpLocation());
         double lat = pickupCoords[0];
         double lon = pickupCoords[1];
+
+        System.out.println("📍 Pickup coordinates: " + lat + ", " + lon);
 
         // Step 2: Ask Redis to find drivers within 5km radius
         List<String> nearbyDriverIds = geoService.findNearByDrivers(lat, lon, 5.0);

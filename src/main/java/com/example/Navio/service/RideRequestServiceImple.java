@@ -1,6 +1,6 @@
 package com.example.Navio.service;
 
-import com.example.Navio.config.NearestDriverStrategy;
+import com.example.Navio.config.CityCoordinatesService;
 import com.example.Navio.dto.RideRequestDto;
 import com.example.Navio.interfaces.DriverMatchingStrategy;
 import com.example.Navio.model.Driver;
@@ -8,16 +8,19 @@ import com.example.Navio.model.Ride;
 import com.example.Navio.model.User;
 import com.example.Navio.repository.DriverRepository;
 import com.example.Navio.repository.RideRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -38,6 +41,16 @@ public class RideRequestServiceImple {
     @Autowired
     private NotificationServiceImple notificationServiceImple;
 
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private CityCoordinatesService cityCoordinatesService;
+
+
     private double[] getCoordinates(String city) {
         return switch (city.toLowerCase()) {
             case "vapi" -> new double[]{20.3710, 72.9043};
@@ -50,6 +63,7 @@ public class RideRequestServiceImple {
     }
 
 //    1. Request Ride
+    @Transactional
     public void requestRide(Long driverId, RideRequestDto dto, User user) throws MessagingException, UnsupportedEncodingException {
         Ride ride = new Ride();
         Driver driver = driverRepository.findById(driverId).orElseThrow();
@@ -59,8 +73,8 @@ public class RideRequestServiceImple {
         ride.setDropLocation(dto.getDropLocation());
         ride.setRequestedTime(LocalDateTime.now());
 
-        double[] pickupCoords = getCoordinates(dto.getPickUpLocation());
-        double[] dropCoords = getCoordinates(dto.getDropLocation());
+        double[] pickupCoords = cityCoordinatesService.getCoordinates(dto.getPickUpLocation());
+        double[] dropCoords = cityCoordinatesService.getCoordinates(dto.getDropLocation());
 
         ride.setPickUpLatitude(pickupCoords[0]);
         ride.setPickUpLongitude(pickupCoords[1]);
@@ -125,5 +139,28 @@ public class RideRequestServiceImple {
 
         driverRepository.save(driver);
         return "Driver rated successfully!";
+    }
+
+//    Phase 4 — publishing to Redis when a ride is requested
+//    takes a new ride request and notifies all nearby drivers about it using Redis.
+    public void publishNewRideToDriver(Ride ride, List<Long> driverIds) {
+        Long id = ride.getDriverId();
+        Driver driver = driverRepository.findById(id).orElseThrow();
+        Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("type", "NEW_RIDE");
+        payload.put("rideId", ride.getId());
+        payload.put("riderId", ride.getRiderId());
+        payload.put("pickUpLocation", ride.getPickUpLocation());
+        payload.put("dropLocation", ride.getDropLocation());
+        payload.put("fare", ride.getFare());
+        payload.put("driverUsername", driver.getUser().getEmail()); // or whatever is used in JWT
+
+        try {
+            String json = objectMapper.writeValueAsString(payload);
+            redisTemplate.convertAndSend("ride-requests", json);
+            log.info("Redis: Published new ride to channel 'ride-requests' → {}", json);
+        } catch (Exception e) {
+            log.error("Failed to publish ride to Redis: {}", e.getMessage());
+        }
     }
 }

@@ -2,22 +2,22 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{base::Layout(~{::section})}">
 <head>
-<head>
-    <meta charset="UTF-8">
-    <title>Uber Application</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Custom font for a more Uber-like feel */
-        body {
-            font-family: 'Uber Move Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        }
-        /* Style for the map container to ensure it fills its parent */
-        #map {
-            height: 100%;
-            width: 100%;
-        }
-    </style>
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <title>Uber Application</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+            /* Custom font for a more Uber-like feel */
+            body {
+                font-family: 'Uber Move Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            }
+            /* Style for the map container to ensure it fills its parent */
+            #map {
+                height: 100%;
+                width: 100%;
+            }
+        </style>
+    </head>
 <body class="font-sans text-gray-800">
 <section>
 
@@ -116,35 +116,6 @@
     <footer class="bg-gray-900 text-white text-center py-4">
         <p class="text-sm">&copy; 2025 Uber Clone. All Rights Reserved.</p>
     </footer>
-
-    <script>
-        function initMap() {
-            const map = new google.maps.Map(document.getElementById("map"), {
-                center: { lat: 20.3888, lng: 72.9268 }, // Coordinates for Vapi, India
-                zoom: 10,
-            });
-        }
-    </script>
-    <script>
-        function initMap() {
-            const location = { lat: 20.397, lng: 72.918 }; // Example: Vapi, Gujarat
-            const map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 12,
-                center: location,
-            });
-
-            new google.maps.Marker({
-                position: location,
-                map: map,
-                title: "Vapi, Gujarat",
-            });
-        }
-    </script>
-
-    <script async
-            defer
-            src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
-    </script>
 
 </section>
 </body>

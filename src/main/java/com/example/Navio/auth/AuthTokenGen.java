@@ -19,6 +19,9 @@ public class AuthTokenGen {
     @Value("${secret}")
     private String secretKey;
 
+    @Value("${jwt.expiration}")
+    private long jwtExpirationMs;
+
     private SecretKey getSecretKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
@@ -29,7 +32,7 @@ public class AuthTokenGen {
                 .claim("userId", user.getId())
                 .claim("role", user.getRole().name())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000*60*10))
+                .setExpiration(new Date(System.currentTimeMillis() + (jwtExpirationMs)))
                 .signWith(getSecretKey())
                 .compact();
     }

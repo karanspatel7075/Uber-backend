@@ -65,6 +65,14 @@
                 <input type="number" name="rating" min="1" max="5" step="0.5" class="form-control form-control-sm me-2" placeholder="★" required>
                 <button type="submit" class="btn btn-success btn-sm">Rate</button>
               </form>
+
+              <div class="chat-box mt-2">
+                <h6>Chat with Driver</h6>
+                <div id="chatMessages" style="height:200px; overflow-y:auto; border:1px solid #ccc; padding:5px;"></div>
+                <input type="text" id="chatInput" placeholder="Type a message">
+                <button class="btn btn-sm btn-success" onclick="sendMessage()">Send</button>
+              </div>
+
             </td>
           </tr>
           </tbody>

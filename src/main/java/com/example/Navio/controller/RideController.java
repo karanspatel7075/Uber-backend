@@ -22,6 +22,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Controller
@@ -79,13 +80,41 @@ public class RideController {
 
     @PostMapping("/selectDriver")
     public String requestRide(@ModelAttribute RideRequestDto dto, @RequestParam Long driverId, HttpServletRequest request, Model model, RedirectAttributes redirectAttributes) throws MessagingException, UnsupportedEncodingException {
-        String token = (String) request.getSession().getAttribute("jwtToken");
-        String email = authTokenGen.getUsernameFromToken(token);
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("No user found"));
+        try {
+            String token = (String) request.getSession().getAttribute("jwtToken");
+            String email = authTokenGen.getUsernameFromToken(token);
+            User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("No user found"));
 
-        rideRequestServiceImple.requestRide(driverId, dto, user);
-        redirectAttributes.addFlashAttribute("message", "Ride requested successfully ");
-        return "redirect:/rider/dashboard";
+            // Saving the ride request
+            rideRequestServiceImple.requestRide(driverId, dto, user);
+
+            // get latest ride created by this rider
+            List<Ride> rides = rideRequestServiceImple.getAllRiders(user.getId());
+            Ride latestRide = rides.stream()
+                    .max(Comparator.comparing(Ride::getRequestedTime))
+                    .orElseThrow();
+            // get the last one
+
+            // Find nearby drivers (for notification)
+            List<Driver> nearbyDrivers = driverServiceImple.findNearbyDrivers(dto);
+            List<Long> driverIds = nearbyDrivers.stream()
+                    .map(Driver::getId)
+                    .toList();
+
+            System.out.println("Publishing new ride to Redis...");
+
+            // publish the new ride to Redis channel for websocket to broadcast it
+            rideRequestServiceImple.publishNewRideToDriver(latestRide, driverIds);
+
+            System.out.println("✅ Redis publish call complete.");
+
+            redirectAttributes.addFlashAttribute("message", "Ride requested successfully ");
+            return "redirect:/rider/dashboard";
+        } catch (Exception e) {
+            e.printStackTrace(); // temp debugging
+            redirectAttributes.addFlashAttribute("error", "Something went wrong: " + e.getMessage());
+            return "redirect:/rider/dashboard";
+        }
     }
 
     @PostMapping("/findDriver")
