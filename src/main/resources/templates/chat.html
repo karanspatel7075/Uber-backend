@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Uber Chat Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+<h2>Uber Chat Test</h2>
+
+<label>Ride ID: </label>
+<input type="text" id="rideId" value="123"><br><br>
+
+<label>Sender (Username): </label>
+<input type="text" id="sender" value="user1@example.com"><br><br>
+
+<label>Recipient (Username): </label>
+<input type="text" id="recipient" value="driver1@example.com"><br><br>
+
+<textarea id="chatMessages" cols="50" rows="10" readonly></textarea><br>
+<input type="text" id="messageInput" placeholder="Type message">
+<button onclick="sendMessage()">Send</button>
+
+<script>
+    let stompClient = null;
+
+    function connect() {
+        const socket = new SockJS('http://localhost:8080/ws');
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function(frame) {
+            console.log('Connected: ' + frame);
+            stompClient.subscribe('/user/queue/messages', function(message) {
+                const msg = JSON.parse(message.body);
+                const chatBox = document.getElementById('chatMessages');
+                chatBox.value += msg.sender + ": " + msg.content + "\n";
+            });
+        });
+    }
+
+    function sendMessage() {
+        const message = {
+            rideId: parseInt(document.getElementById("rideId").value),
+            sender: document.getElementById("sender").value,
+            recipient: document.getElementById("recipient").value,
+            content: document.getElementById("messageInput").value
+        };
+        stompClient.send("/app/chat", {}, JSON.stringify(message));
+        document.getElementById("messageInput").value = "";
+    }
+
+    connect();
+</script>
+</body>
+</html>
