@@ -23,7 +23,12 @@
       </div>
 
       <!-- Google Map -->
-      <div id="map" style="height: 400px;" class="rounded-3 shadow-sm mb-4"></div>
+      <div class="text-center mt-4">
+        <a th:href="@{/driver/chat(rideId=${ride.id})}" class="btn btn-primary px-4">
+          💬 Chat with Rider
+        </a>
+      </div>
+
 
       <!-- Buttons -->
       <div class="text-center">

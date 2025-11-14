@@ -66,17 +66,19 @@
                 <button type="submit" class="btn btn-success btn-sm">Rate</button>
               </form>
 
-              <div class="chat-box mt-2">
-                <h6>Chat with Driver</h6>
-                <div id="chatMessages" style="height:200px; overflow-y:auto; border:1px solid #ccc; padding:5px;"></div>
-                <input type="text" id="chatInput" placeholder="Type a message">
-                <button class="btn btn-sm btn-success" onclick="sendMessage()">Send</button>
-              </div>
-
+              <form th:action="@{/rider/chat}" method="get">
+                <input type="hidden" name="rideId" th:value="${ride.id}">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-xl">
+                  Chat with Driver
+                </button>
+              </form>
             </td>
           </tr>
           </tbody>
         </table>
+
+
+
       </div>
 
     </div>

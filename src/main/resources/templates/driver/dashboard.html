@@ -135,13 +135,6 @@
                 <button type="submit" class="btn btn-success btn-sm">End Ride</button>
               </form>
 
-              <div class="chat-box">
-                <h5>Chat with Rider</h5>
-                <div id="chatMessages" style="height:200px; overflow-y:auto; border:1px solid #ccc; padding:5px;"></div>
-                <input type="text" id="chatInput" placeholder="Type a message">
-                <button onclick="sendMessage()">Send</button>
-              </div>
-
             </td>
           </tr>
           </tbody>
@@ -150,6 +143,79 @@
 
     </div>
   </div>
+
+    <!-- Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script th:inline="javascript">
+        let stompClient = null;
+
+        // ✅ Fetch the driver's linked email from Thymeleaf (used for WebSocket user mapping)
+        const driverEmail = /*[[${driver.user.email}]]*/ 'driver1@gamil.com'; // fallback for dev
+        console.log("👨‍✈️ Logged-in Driver Email:", driverEmail);
+
+        // ✅ Connect WebSocket once
+        function connectWebSocket() {
+          console.log("Opening Web Socket...");
+<!--          const socket = new SockJS("/ws");-->
+          const socket = new SockJS("/ws?token=" + encodeURIComponent(driverEmail));
+          stompClient = Stomp.over(socket);
+
+          stompClient.connect({}, function (frame) {
+            console.log("✅ Connected to server:", frame);
+
+            // Subscribe to driver’s private queue
+            stompClient.subscribe("/user/queue/requests", function (message) {
+              console.log("📩 New Ride Request Received:", message.body);
+              const ride = JSON.parse(message.body);
+              console.log("✅ Parsed ride object:", ride);  // 👈 add this line
+              showRideNotification(ride);
+            });
+
+            console.log("👂 Listening for rides for driver:", driverEmail);
+          });
+        }
+
+        // ✅ Display modal & toast for incoming ride
+        function showRideNotification(ride) {
+          // Update modal content
+          document.getElementById("pickUpLocation").innerText = ride.pickUpLocation;
+          document.getElementById("dropLocation").innerText = ride.dropLocation;
+          document.getElementById("rideFare").innerText = ride.fare;
+
+          // Update toast
+          document.getElementById("toastPickup").innerText = ride.pickUpLocation;
+          document.getElementById("toastDrop").innerText = ride.dropLocation;
+
+          // Show toast
+          const toast = new bootstrap.Toast(document.getElementById("rideToast"));
+          toast.show();
+
+          // Show modal
+          const modal = new bootstrap.Modal(document.getElementById("rideRequestModal"));
+          modal.show();
+        }
+
+        // ✅ Handle Accept Ride click
+        document.addEventListener("DOMContentLoaded", function () {
+          document.getElementById("acceptRideBtn").addEventListener("click", () => {
+            alert("✅ Ride Accepted! (Backend integration can be added here)");
+            const modal = bootstrap.Modal.getInstance(document.getElementById("rideRequestModal"));
+            modal.hide();
+          });
+
+          connectWebSocket(); // Connect when the page is ready
+          // 🔄 Auto-refresh page every 10 seconds
+      setInterval(() => {
+        console.log("🔄 Refreshing page to fetch new rides...");
+        window.location.reload();
+      }, 2000); // 10000ms = 10 seconds
+        });
+    </script>
+
+
 </section>
 </body>
 </html>

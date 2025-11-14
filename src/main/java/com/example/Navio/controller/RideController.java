@@ -8,12 +8,15 @@ import com.example.Navio.model.Driver;
 import com.example.Navio.model.Ride;
 import com.example.Navio.model.User;
 import com.example.Navio.repository.DriverRepository;
+import com.example.Navio.repository.RideRepository;
 import com.example.Navio.repository.UserRepository;
 import com.example.Navio.service.DriverServiceImple;
 import com.example.Navio.service.GeoService;
 import com.example.Navio.service.RideRequestServiceImple;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -42,6 +45,9 @@ public class RideController {
     private RideRequestServiceImple rideRequestServiceImple;
 
     @Autowired
+    public RideRepository rideRepository;
+
+    @Autowired
     private DriverMatchingStrategy driverMatchingStrategy;
 
     @Autowired
@@ -52,6 +58,8 @@ public class RideController {
 
     @Autowired
     private DriverServiceImple driverServiceImple;
+
+    private static final Logger logger = LoggerFactory.getLogger(RideController.class);
 
     @GetMapping("/dashboard")
     public String rideDashboard(HttpServletRequest request, Model model) {
@@ -155,4 +163,31 @@ public class RideController {
         redirectAttributes.addFlashAttribute("message", message);
         return "redirect:/rider/dashboard";
     }
+
+    @RequestMapping("/favicon.ico")
+    @ResponseBody
+    public void disableFavicon() {
+        // Prevent Spring from interpreting /favicon.ico as rideId
+    }
+
+    @GetMapping("/chat")
+    public String openChatPage(@RequestParam("rideId") Long rideId,
+                               HttpServletRequest request,
+                               Model model) {
+        String token = (String) request.getSession().getAttribute("jwtToken");
+        String email = authTokenGen.getUsernameFromToken(token);
+        logger.info("📧 Rider email extracted from token: {}", email);
+
+        Ride ride = rideRepository.findById(rideId).orElseThrow();
+        Driver driver = driverRepository.findById(ride.getDriverId()).orElseThrow();
+        logger.info("🚗 Ride found: Pickup={}, Drop={}, DriverId={}",
+                ride.getPickUpLocation(), ride.getDropLocation(), ride.getDriverId());
+
+        model.addAttribute("driverEmail", driver.getUser().getEmail());
+        model.addAttribute("riderEmail", email);
+
+        logger.info("✅ Chat page model prepared successfully.");
+        return "rider/riderChat";
+    }
+
 }

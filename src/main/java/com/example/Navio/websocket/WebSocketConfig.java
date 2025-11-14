@@ -13,9 +13,6 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.server.HandshakeInterceptor;
-import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
-
-import java.security.Principal;
 import java.util.Map;
 
 //Phase 1 — WebSocket configuration (STOMP endpoint + handshake interceptor)
@@ -29,9 +26,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("*")
+        registry.addEndpoint("/ws") // for messaging also
+                .setAllowedOriginPatterns("*") // for messaging also
                 .addInterceptors(new JwtHandshakeInterceptor(authTokenGen))
+                .setHandshakeHandler(new StompPrincipalHandshakeHandler())   // 👈 ADD THIS LINE
                 .withSockJS()
                 .setSuppressCors(true);;
     }
@@ -51,21 +49,54 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         @Override
         public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
                                        WebSocketHandler wsHandler, Map<String, Object> attributes) {
-            // Extract session cookie or query param that contains your JWT token
-            // Example: token stored in HTTP session under "jwtToken" (like your controllers)
-            if (request instanceof org.springframework.http.server.ServletServerHttpRequest servletRequest) {
+
+            if (request instanceof ServletServerHttpRequest servletRequest) {
                 HttpSession httpSession = servletRequest.getServletRequest().getSession(false);
+                String username = null;
+
+        /* ------------------------------------------------------------
+           1️⃣ Try reading JWT from HttpSession (server-stored token)
+           ------------------------------------------------------------ */
                 if (httpSession != null) {
                     String token = (String) httpSession.getAttribute("jwtToken");
                     if (token != null) {
-                        String username = authTokenGen.getUsernameFromToken(token);
-                        // store username as principal-like value
-                        attributes.put("username", username);
+                        username = authTokenGen.getUsernameFromToken(token);
                     }
                 }
+
+        /* ------------------------------------------------------------
+           2️⃣ Try reading token from WebSocket URL:  /ws?token=JWT_HERE
+           ------------------------------------------------------------ */
+                if (username == null) {
+                    String query = servletRequest.getServletRequest().getQueryString();
+                    if (query != null && query.contains("token=")) {
+
+                        // Extract token safely
+                        String token = query.substring(query.indexOf("token=") + 6);
+
+                        // If there are other params: token=xxx&other=yyy
+                        if (token.contains("&")) {
+                            token = token.substring(0, token.indexOf("&"));
+                        }
+
+                        username = authTokenGen.getUsernameFromToken(token);
+                    }
+                }
+
+        /* ------------------------------------------------------------
+           3️⃣ Store Principal username into WebSocket attributes
+           ------------------------------------------------------------ */
+                if (username != null) {
+                    attributes.put("username", username);
+                    System.out.println("🟢 WebSocket Authenticated User = " + username);
+                } else {
+                    System.out.println("🔴 WebSocket Handshake FAILED → No JWT found!");
+                }
             }
+
             return true;
         }
+
 
         @Override
         public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,

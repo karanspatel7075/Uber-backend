@@ -23,4 +23,7 @@ public class ChatMessage {
     private String recipient;
     private String content;
     private Instant timestamp;
+    private String type = "CHAT";
+
+
 }

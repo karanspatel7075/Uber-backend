@@ -197,7 +197,7 @@ public class DriverServiceImple {
         Ride ride = rideRepository.findById(rideId).orElseThrow(() -> new RuntimeException("Ride is not found"));
         Driver driver = driverRepository.findById(ride.getDriverId()).orElseThrow();
 
-        double[] coords = getCoordinates(location);
+        double[] coords = cityCoordinatesService.getCoordinates(location);
         driver.setLatitude(coords[0]);
         driver.setLongitude(coords[1]);
         driver.setCurrentLocation(location);

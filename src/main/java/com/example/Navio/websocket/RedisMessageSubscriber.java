@@ -27,8 +27,6 @@ public class RedisMessageSubscriber implements MessageListener {
         this.messagingTemplate = messagingTemplate;
     }
 
-    
-
     // This will be called for every message on "ride-requests"
     @Override
     public void onMessage(Message message, byte[] pattern) {
@@ -55,6 +53,7 @@ public class RedisMessageSubscriber implements MessageListener {
                     // In RedisMessageSubscriber
                     log.info("Sending message to user {}", map.get("driverUsername"));
 
+                    System.out.println("📨 Sending message to user: " + driverEmail);
                     messagingTemplate.convertAndSendToUser(
                             driverEmail,  // must match principal name
                             "/queue/requests",  // user-specific queue

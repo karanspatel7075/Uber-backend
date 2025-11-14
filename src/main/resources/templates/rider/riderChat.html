@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Rider Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body class="bg-gray-100 flex flex-col h-screen">
+
+<!-- Header -->
+<header class="bg-blue-600 text-white text-center py-4 text-xl font-semibold shadow-md">
+    Rider-Driver Chat
+</header>
+
+<!-- Chat Container -->
+<div class="flex-1 flex flex-col justify-between max-w-3xl mx-auto w-full bg-white shadow-lg mt-6 rounded-2xl border border-gray-200">
+
+    <!-- Messages Area -->
+    <div id="chat-box" class="flex-1 p-4 overflow-y-auto space-y-2">
+        <!-- Messages appear here -->
+    </div>
+
+    <!-- Input Area -->
+    <div class="border-t border-gray-200 p-4 flex items-center">
+        <input id="messageInput"
+               type="text"
+               placeholder="Type a message..."
+               class="flex-1 border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring focus:ring-blue-400">
+        <button onclick="sendMessage()"
+                class="ml-2 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition">
+            Send
+        </button>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    let stompClient = null;
+
+    // Extract sender (logged-in user's email)
+    let sender = /*[[${riderEmail}]]*/ "";  // or driverEmail depending on page
+    let driverEmail = /*[[${driverEmail}]]*/ "";
+
+<!--let sender = /*[[${riderEmail}]]*/ null;-->
+<!--let driverEmail = /*[[${driverEmail}]]*/ null;-->
+<!--let sessionJwt = /*[[${session.jwtToken}]]*/ null;-->
+
+if (!driverEmail || !sender) {
+    console.error("❌ Thymeleaf variables missing");
+}
+
+
+    // JWT for WebSocket handshake
+    let sessionJwt = /*[[${session.jwtToken}]]*/ "";
+
+    function connect() {
+
+        // ✅ FIX: create correct SockJS object
+        const socket = new SockJS('/ws?token=' + sessionJwt);
+
+        // ✅ FIX: pass socket correctly
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, (frame) => {
+            console.log("✅ WebSocket Connected:", frame);
+
+            // Subscribe to private queue
+            stompClient.subscribe("/user/queue/messages", (message) => {
+                const msg = JSON.parse(message.body);
+
+                showMessage(
+                    msg.content,
+                    msg.sender === sender ? 'outgoing' : 'incoming'
+                );
+            });
+        });
+    }
+
+    // Send chat message
+    function sendMessage() {
+        const messageInput = document.getElementById("messageInput");
+        const content = messageInput.value.trim();
+
+        if (content && stompClient) {
+            const chatMessage = {
+                sender: sender,
+                recipient: driverEmail,   // rider page OR driver page
+                content: content,
+                timestamp: new Date()
+            };
+
+            stompClient.send("/app/chat", {}, JSON.stringify(chatMessage));
+            showMessage(content, 'outgoing');
+            messageInput.value = "";
+        }
+    }
+
+    // Display messages
+    function showMessage(text, type) {
+        const chatBox = document.getElementById("chat-box");
+        const messageDiv = document.createElement("div");
+
+        if (type === 'outgoing') {
+            messageDiv.className = "text-right";
+            messageDiv.innerHTML =
+                `<span class='inline-block bg-blue-600 text-white px-4 py-2 rounded-2xl max-w-xs break-words'>${text}</span>`;
+        } else {
+            messageDiv.className = "text-left";
+            messageDiv.innerHTML =
+                `<span class='inline-block bg-gray-200 text-gray-900 px-4 py-2 rounded-2xl max-w-xs break-words'>${text}</span>`;
+        }
+
+        chatBox.appendChild(messageDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    connect();
+</script>
+
+<!-- JS: Thymeleaf inline so variables are injected -->
+
+
+
+</body>
+</html>

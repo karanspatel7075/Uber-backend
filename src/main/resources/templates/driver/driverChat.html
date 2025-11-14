@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Driver Chat</title>
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<div class="w-full max-w-2xl bg-white shadow-lg rounded-xl p-6">
+  <h2 class="text-2xl font-semibold mb-4 text-center">Chat with Rider</h2>
+
+  <div id="chatBox" class="border h-80 overflow-y-auto p-3 rounded-md bg-gray-50 mb-4"></div>
+
+  <div class="flex space-x-2">
+    <input id="messageInput" type="text" placeholder="Type your message..."
+           class="flex-grow border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+    <button onclick="sendMessage()"
+            class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Send</button>
+  </div>
+</div>
+
+<script th:inline="javascript">
+
+<!--  const driverEmail = /*[[${driverEmail}]]*/ "";-->
+<!--  const riderEmail  = /*[[${riderEmail}]]*/ "";-->
+
+let driverEmail = /*[[${driverEmail}]]*/ null;
+let riderEmail = /*[[${riderEmail}]]*/ null;
+<!--let sessionJwt = /*[[${session.jwtToken}]]*/ null;-->
+
+if (!driverEmail || !riderEmail) {
+    console.error("❌ Thymeleaf variables missing");
+}
+
+
+  let stompClient = null;
+
+  // JWT for WebSocket handshake
+    let sessionJwt = /*[[${session.jwtToken}]]*/ "";
+
+  function connectWebSocket() {
+
+      // ✅ FIX: create correct SockJS object
+        const socket = new SockJS('/ws?token=' + sessionJwt);
+
+        // ✅ FIX: pass socket correctly
+        stompClient = Stomp.over(socket);
+
+      stompClient.connect({}, function () {
+          console.log("✅ Connected as driver:", driverEmail);
+
+          stompClient.subscribe("/user/queue/messages", function (message) {
+              const msg = JSON.parse(message.body);
+              showMessage(msg.sender + ": " + msg.content);
+          });
+      }, function (error) {
+          console.error("❌ WebSocket Connection Error:", error);
+          console.log("🔄 Reconnecting in 3 seconds...");
+          setTimeout(connectWebSocket, 3000);
+      });
+  }
+
+  connectWebSocket(); // 🔥 Auto-connect on page load
+
+
+  // -----------------------------
+  // SEND MESSAGE
+  // -----------------------------
+  function sendMessage() {
+      const msgInput = document.getElementById("messageInput");
+      const message = msgInput.value.trim();
+
+      if (!message) return;
+
+      const chatMessage = {
+          sender: driverEmail,
+          recipient: riderEmail,
+          content: message
+      };
+
+      stompClient.send("/app/chat", {}, JSON.stringify(chatMessage));
+
+      showMessage("You: " + message);
+
+      msgInput.value = "";
+  }
+
+
+  // Press Enter to Send
+  document.addEventListener("DOMContentLoaded", () => {
+      const input = document.getElementById("messageInput");
+
+      input.addEventListener("keydown", function (e) {
+          if (e.key === "Enter") {
+              e.preventDefault();
+              sendMessage();
+          }
+      });
+  });
+
+
+  // -----------------------------
+  // DISPLAY CHAT MESSAGE
+  // -----------------------------
+  function showMessage(message) {
+      const chatBox = document.getElementById("chatBox");
+      const p = document.createElement("p");
+
+      p.classList.add("mb-1");
+      p.textContent = message;
+
+      chatBox.appendChild(p);
+      chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+</script>
+
+
+
+</body>
+</html>

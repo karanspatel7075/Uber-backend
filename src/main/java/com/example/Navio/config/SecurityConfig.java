@@ -30,7 +30,7 @@ public class SecurityConfig {
         httpSecurity
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers( "/", "/uber/**", "/auth/**","/driver_img/**").permitAll() // 👈 allow public
+                        .requestMatchers( "/", "/uber/**", "/auth/**","/driver_img/**","/favicon.ico").permitAll() // 👈 allow public
 //                        .requestMatchers("/driver/**").hasRole("DRIVER") // for now disabled due to development
 //                        .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/driver/**", "/admin/**").permitAll() // 👈 Allow both temporarily

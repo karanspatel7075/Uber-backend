@@ -113,4 +113,27 @@ public class DriverController {
         redirectAttributes.addFlashAttribute("message", "Successfully Updated");
         return "redirect:/driver/dashboard";
     }
+
+    @RequestMapping("/favicon.ico")
+    @ResponseBody
+    public void disableFavicon() {
+        // Prevent Spring from interpreting /favicon.ico as rideId
+    }
+
+    @GetMapping("/chat")
+    public String openDriverChatPage(@RequestParam("rideId") Long rideId, HttpServletRequest request,
+                                     Model model) {
+        String token = (String) request.getSession().getAttribute("jwtToken");
+        String email = authTokenGen.getUsernameFromToken(token);
+
+        Ride ride = rideRepository.findById(rideId).orElseThrow();
+        User rider = userRepository.findById(ride.getRiderId()).orElseThrow(() -> new RuntimeException("Rider not found"));
+
+        model.addAttribute("driverEmail", email);
+        model.addAttribute("riderEmail", rider.getEmail());
+        return "driver/driverChat";
+    }
+
+
+
 }
