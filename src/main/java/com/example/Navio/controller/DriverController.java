@@ -18,6 +18,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/driver")
@@ -114,6 +115,19 @@ public class DriverController {
         return "redirect:/driver/dashboard";
     }
 
+    @PostMapping("/updateLocationLive")
+    @ResponseBody
+    public String updateLocationLive(@RequestBody Map<String, Object> payload) {
+
+        Long rideId = Long.valueOf(payload.get("rideId").toString());
+        double lat = Double.parseDouble(payload.get("lat").toString());
+        double lng = Double.parseDouble(payload.get("lng").toString());
+
+        driverServiceImple.updateDriverCoordinates(rideId, lat, lng);
+
+        return "OK";
+    }
+
     @RequestMapping("/favicon.ico")
     @ResponseBody
     public void disableFavicon() {
@@ -135,7 +149,4 @@ public class DriverController {
 
         return "chat_page";
     }
-
-
-
 }

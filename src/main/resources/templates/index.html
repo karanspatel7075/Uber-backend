@@ -36,6 +36,8 @@
             <p class="text-lg text-gray-600 max-w-lg mb-8">
                 Discover the convenience of Uber. Request a ride now, or schedule one for later.
             </p>
+
+            <form th:action="@{/uber/getMap}" method="get">
             <div class="space-y-4 max-w-sm">
                 <div class="relative">
                     <div class="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black h-2 w-2 rounded-full"></div>
@@ -53,6 +55,7 @@
                     See prices
                 </button>
             </div>
+            </form>
         </div>
 
         <!-- RIGHT SIDE: MAP -->

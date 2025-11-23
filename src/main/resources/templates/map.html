@@ -1,33 +1,182 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <title>Navio Map</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{base::Layout(~{::section})}">
 
-    <style>
-        #map {
-            height: 100vh;
-            width: 100%;
-        }
-    </style>
-</head>
+<section>
 
-<body>
-<div id="map"></div>
+    <head>
+        <meta charset="UTF-8">
+        <title>Uber Application</title>
 
-<script>
-    // Initialize map
-    var map = L.map('map').setView([20.3974, 72.8328], 13); // Vapi default
+        <!-- Tailwind -->
+        <script src="https://cdn.tailwindcss.com"></script>
 
-    // Add OSM tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-    }).addTo(map);
+        <!-- Leaflet -->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-    // Add marker
-    var marker = L.marker([20.3974, 72.8328]).addTo(map);
-    marker.bindPopup("You are here").openPopup();
-</script>
-</body>
+        <style>
+            #map {
+                width: 100%;
+                height: 400px;
+            }
+        </style>
+    </head>
+
+    <body class="font-sans text-gray-800">
+
+    <main class="flex flex-col md:flex-row min-h-[calc(100vh-64px)]">
+
+        <!-- LEFT SIDE -->
+        <div class="md:w-1/2 p-10 lg:p-20 flex flex-col justify-start">
+
+            <h1 class="text-4xl sm:text-5xl font-bold leading-tight mb-4">
+                Request a ride for now or later
+            </h1>
+
+            <p class="text-lg text-gray-600 max-w-lg mb-8">
+                Discover the convenience of Uber. Request a ride now, or schedule one for later.
+            </p>
+
+            <!-- FORM -->
+            <form th:action="@{/rider/findDriver}" th:object="${rideRequestDto}" method="post">
+                <div class="space-y-4 max-w-sm">
+
+                    <div class="relative">
+                        <div class="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black h-2 w-2 rounded-full"></div>
+                        <input type="text" name="pickUpLocation" id="pickup" placeholder="Pickup location"
+                               class="w-full pl-8 py-3 pr-4 rounded border border-gray-300 focus:ring-2 focus:ring-black">
+                    </div>
+
+                    <div class="relative">
+                        <div class="absolute left-3 top-1/2 transform -translate-y-1/2 bg-gray-400 h-2 w-2"></div>
+                        <input type="text" name="dropLocation" id="drop" placeholder="Dropoff location"
+                               class="w-full pl-8 py-3 pr-4 rounded border border-gray-300 focus:ring-2 focus:ring-black">
+                    </div>
+
+                    <button type="submit" class="w-full bg-black text-white py-4 rounded font-semibold hover:bg-gray-800">
+                        See prices
+                    </button>
+                </div>
+            </form>
+
+            <!-- DRIVER LIST (PLACED CORRECTLY BELOW FORM) -->
+            <div class="mt-10" th:if="${drivers != null}">
+                <h2 class="text-2xl font-bold mb-4">Available Drivers</h2>
+
+                <div th:if="${drivers.isEmpty()}">
+                    <p class="text-red-500">No drivers found nearby 😞</p>
+                </div>
+
+                <div th:each="driver : ${drivers}" class="border p-4 rounded-xl shadow mb-4">
+                    <p class="text-lg"><strong>Vehicle:</strong> <span th:text="${driver.vehicleId}"></span></p>
+                    <p><strong>Location:</strong> <span th:text="${driver.currentLocation}"></span></p>
+
+                    <form th:action="@{/rider/selectDriver}" method="post">
+                        <input type="hidden" name="driverId" th:value="${driver.id}">
+                        <input type="hidden" name="pickUpLocation" th:value="${dto.pickUpLocation}">
+                        <input type="hidden" name="dropLocation" th:value="${dto.dropLocation}">
+
+                        <button type="submit" class="mt-3 bg-black text-white px-4 py-2 rounded">
+                            Select Driver
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT SIDE: MAP -->
+        <div class="md:w-1/2 flex items-center justify-center p-6">
+            <div id="map" class="w-full max-w-xl rounded-lg shadow-md"></div>
+        </div>
+
+    </main>
+
+    <footer class="bg-gray-900 text-white text-center py-4">
+        <p class="text-sm">&copy; 2025 Uber Clone. All Rights Reserved.</p>
+    </footer>
+
+    </body>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+
+            // INIT MAP
+            const map = L.map('map').setView([20.3974, 72.8328], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            let pickupMarker = null;
+            let dropMarker = null;
+            let routeLine = null;
+
+            // INPUT FIELDS
+            const pickupInput = document.getElementById("pickup");
+            const dropInput = document.getElementById("drop");
+
+            async function getCoordinates(address) {
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                if (data.length === 0) return null;
+                return {
+                    lat: parseFloat(data[0].lat),
+                    lon: parseFloat(data[0].lon)
+                };
+            }
+
+            async function updateMap() {
+                const pickup = pickupInput.value;
+                const drop = dropInput.value;
+
+                // Clear old markers and route
+                if (pickupMarker) map.removeLayer(pickupMarker);
+                if (dropMarker) map.removeLayer(dropMarker);
+                if (routeLine) map.removeLayer(routeLine);
+
+                // Get pickup coordinates
+                if (pickup) {
+                    const coords = await getCoordinates(pickup);
+                    if (coords) {
+                        pickupMarker = L.marker([coords.lat, coords.lon]).addTo(map)
+                            .bindPopup("Pickup Location");
+                        map.setView([coords.lat, coords.lon], 13);
+                    }
+                }
+
+                // Get drop coordinates
+                if (drop) {
+                    const coords = await getCoordinates(drop);
+                    if (coords) {
+                        dropMarker = L.marker([coords.lat, coords.lon]).addTo(map)
+                            .bindPopup("Drop Location");
+                    }
+                }
+
+                // Draw a line if both points exist
+                if (pickupMarker && dropMarker) {
+                    routeLine = L.polyline(
+                        [pickupMarker.getLatLng(), dropMarker.getLatLng()],
+                        { color: "blue", weight: 4 }
+                    ).addTo(map);
+
+                    map.fitBounds(routeLine.getBounds());
+                }
+            }
+
+            // Trigger update
+            pickupInput.addEventListener("change", updateMap);
+            dropInput.addEventListener("change", updateMap);
+
+        });
+    </script>
+
+
+</section>
+
 </html>
+

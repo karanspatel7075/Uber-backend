@@ -167,4 +167,11 @@ public class UserController {
 
         return "redirect:/uber/profile";    // ✅ redirect after post (Post/Redirect/Get pattern)
     }
+
+    @GetMapping("/getMap")
+    public String getMapping() {
+        return "/map";
+    }
+
+
 }

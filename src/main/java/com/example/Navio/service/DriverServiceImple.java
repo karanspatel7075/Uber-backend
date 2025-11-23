@@ -209,5 +209,24 @@ public class DriverServiceImple {
         geoService.addDriverLocation(driver.getId(), coords[0], coords[1]);
     }
 
+    public void updateDriverCoordinates(Long rideId, double lat, double lng) {
+
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new RuntimeException("Ride not found"));
+
+        Driver driver = driverRepository.findById(ride.getDriverId())
+                .orElseThrow(() -> new RuntimeException("Driver not found"));
+
+        driver.setLatitude(lat);
+        driver.setLongitude(lng);
+
+        // Save DB
+        driverRepository.save(driver);
+
+        // Save to Redis GEO
+        geoService.addDriverLocation(driver.getId(), lat, lng);
+    }
+
+
 
 }

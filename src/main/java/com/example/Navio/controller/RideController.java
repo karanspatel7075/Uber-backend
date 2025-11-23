@@ -147,7 +147,8 @@ public class RideController {
 
         model.addAttribute("dto", rideRequestDto);
         model.addAttribute("drivers", nearbyDrivers);
-        return "rider/selectDriver";
+//        return "rider/selectDriver";
+        return "/map";
     }
 
     @PostMapping("/cancelRide")

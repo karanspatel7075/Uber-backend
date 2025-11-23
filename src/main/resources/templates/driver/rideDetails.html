@@ -9,9 +9,11 @@
   <!-- Bootstrap -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
 
-  <!-- Leaflet CSS + JS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+</head>
+
+<body>
+<section>
 
   <style>
     #map {
@@ -20,11 +22,14 @@
       border-radius: 12px;
       margin-top: 15px;
     }
+    /* Add a subtle shadow/outline to the car icon for better visibility */
+    .leaflet-marker-icon.driver-icon {
+        filter: drop-shadow(0 0 2px rgba(0,0,0,0.7));
+    }
   </style>
-</head>
 
-<body>
-<section>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <div class="container mt-5">
     <div class="card shadow-lg p-4 rounded-4">
 
@@ -37,26 +42,21 @@
         <p><b>Status:</b> <span th:text="${ride.status}"></span></p>
       </div>
 
-      <!-- MAP -->
       <div id="map"></div>
 
-      <!-- Chat Button -->
       <div class="text-center mt-4">
         <a th:href="@{/driver/chat(rideId=${ride.id})}" class="btn btn-primary px-4">
           💬 Chat with Rider
         </a>
       </div>
 
-      <!-- Driver Actions -->
       <div class="text-center mt-3">
 
-        <!-- Start Ride -->
         <form th:if="${ride.status == 'Accepted'}"
               th:action="@{/driver/startRide/{rideId}(rideId=${ride.id})}" method="post" class="d-inline">
           <button type="submit" class="btn btn-warning px-4">Start Ride</button>
         </form>
 
-        <!-- End Ride -->
         <form th:if="${ride.status == 'Ongoing'}"
               th:action="@{/driver/endRide/{rideId}(rideId=${ride.id})}" method="post" class="d-inline">
           <input type="number" name="distance" step="0.1" placeholder="Distance (km)"
@@ -64,7 +64,6 @@
           <button type="submit" class="btn btn-success px-4">End Ride</button>
         </form>
 
-        <!-- Final End -->
         <form th:if="${ride.status == 'Completed'}"
               th:action="@{/driver/updateLocation}" method="post" class="d-inline">
           <input type="hidden" name="rideId" th:value="${ride.id}">
@@ -75,43 +74,298 @@
       </div>
     </div>
   </div>
+  <script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", async () => {
+
+        const pickup = {
+            lat: [[${ride.pickUpLatitude}]],
+            lng: [[${ride.pickUpLongitude}]]
+        };
+
+        const drop = {
+            lat: [[${ride.dropLatitude}]],
+            lng: [[${ride.dropLongitude}]]
+        };
+
+        const rideId = [[${ride.id}]];
+
+        // MAP
+        const map = L.map("map").setView([pickup.lat, pickup.lng], 14);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png")
+            .addTo(map);
+
+        // Custom Icons for Pickup/Drop for realism
+        const pickupIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/854/854901.png', // A generic pin/start point
+            iconSize: [35, 35],
+            iconAnchor: [17, 35]
+        });
+        const dropIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/854/854903.png', // A generic pin/end point
+            iconSize: [35, 35],
+            iconAnchor: [17, 35]
+        });
+
+
+        // Markers
+        L.marker([pickup.lat, pickup.lng], { icon: pickupIcon }).addTo(map).bindPopup("Pickup");
+        L.marker([drop.lat, drop.lng], { icon: dropIcon }).addTo(map).bindPopup("Drop");
+
+        // ------------------------------------------------------------------------------------
+        // 🚗 STEP 1: Get real road route from OSRM API
+        // ------------------------------------------------------------------------------------
+        let url = `https://router.project-osrm.org/route/v1/driving/${pickup.lng},${pickup.lat};${drop.lng},${drop.lat}?overview=full&geometries=geojson`;
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        const route = data.routes[0].geometry.coordinates;
+
+        // Convert [lng, lat] → [lat, lng]
+        const latLngRoute = route.map(coord => [coord[1], coord[0]]);
+
+        // Draw polyline along road
+        const routeLine = L.polyline(latLngRoute, {
+            color: "#007bff", // Use primary color for route
+            weight: 5,
+            opacity: 0.7
+        }).addTo(map);
+
+        // Fit map to route
+        map.fitBounds(routeLine.getBounds());
+
+        // ------------------------------------------------------------------------------------
+        // 🚕 STEP 2: Animate driver icon along the route (Improved)
+        // ------------------------------------------------------------------------------------
+        let driverIcon = L.icon({
+            // New, better car icon (e.g., a taxi/car from Flaticon)
+            iconUrl: "https://cdn-icons-png.flaticon.com/512/3202/3202926.png", // Example: A black car/taxi icon
+            iconSize: [40, 40], // Slightly larger
+            iconAnchor: [20, 20],
+            className: 'driver-icon' // For custom CSS
+        });
+
+        // Leaflet helper function to calculate bearing (angle) between two points
+        function getBearing(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // metres
+            const φ1 = lat1 * Math.PI / 180;
+            const φ2 = lat2 * Math.PI / 180;
+            const λ1 = lon1 * Math.PI / 180;
+            const λ2 = lon2 * Math.PI / 180;
+
+            const y = Math.sin(λ2 - λ1) * Math.cos(φ2);
+            const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(λ2 - λ1);
+            const bearing = Math.atan2(y, x) * 180 / Math.PI;
+
+            // Normalize bearing to 0-360 degrees, and add 90 degrees offset to match icon orientation
+            return (bearing + 360) % 360;
+        }
+
+        let driverMarker = L.marker(latLngRoute[0], { icon: driverIcon }).addTo(map);
+
+        let index = 0;
+        // **NEW:** Control the animation speed (smaller delta moves slower)
+        const animationDelta = 2;
+
+        function animateDriver() {
+            if (index >= latLngRoute.length) return;
+
+            // **NEW:** Calculate bearing for rotation
+            if (index + animationDelta < latLngRoute.length) {
+                const currentPoint = latLngRoute[index];
+                const nextPoint = latLngRoute[index + animationDelta];
+
+                const bearing = getBearing(currentPoint[0], currentPoint[1], nextPoint[0], nextPoint[1]);
+
+                // Rotate the icon element using CSS transform
+                driverMarker._icon.style.transform += ` rotate(${bearing}deg)`;
+            }
+
+            // Update marker position
+            driverMarker.setLatLng(latLngRoute[index]);
+
+            // Send simulated location to backend
+            fetch("/driver/updateLocationLive", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    rideId: rideId,
+                    lat: latLngRoute[index][0],
+                    lng: latLngRoute[index][1]
+                })
+            });
+
+            // Increment index by a 'delta' to control speed
+            index += animationDelta;
+
+            // Use setTimeout for a more controlled, slower, and visually smoother 'real-time' movement
+            setTimeout(animateDriver, 50); // Move every 50ms
+        }
+
+        // Only start the animation if the ride is 'Accepted' or 'Ongoing'
+        const rideStatus = [[${ride.status}]];
+        if (rideStatus === 'Accepted' || rideStatus === 'Ongoing') {
+            animateDriver();  // Start animation
+        }
+
+    });
+  </script>
+
 </section>
+<!--<section>-->
 
-<!-- Leaflet Map Script -->
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
+<!--  <style>-->
+<!--    #map {-->
+<!--      height: 350px;-->
+<!--      width: 100%;-->
+<!--      border-radius: 12px;-->
+<!--      margin-top: 15px;-->
+<!--    }-->
+<!--  </style>-->
 
-    // TODO: Replace with actual backend coordinates
-    const pickup = { lat: 20.385, lng: 72.912 };
-    const drop = { lat: 20.42, lng: 72.93 };
+<!--  &lt;!&ndash; Leaflet CSS + JS &ndash;&gt;-->
+<!--  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>-->
+<!--  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>-->
+<!--  <div class="container mt-5">-->
+<!--    <div class="card shadow-lg p-4 rounded-4">-->
 
-    // Map Init
-    const map = L.map("map").setView([pickup.lat, pickup.lng], 13);
+<!--      <h3 class="text-center mb-4">Ride Details</h3>-->
 
-    // Tile Layer
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: "© OpenStreetMap"
-    }).addTo(map);
+<!--      <div>-->
+<!--        <p><b>Ride ID:</b> <span th:text="${ride.id}"></span></p>-->
+<!--        <p><b>Pickup:</b> <span th:text="${ride.pickUpLocation}"></span></p>-->
+<!--        <p><b>Drop:</b> <span th:text="${ride.dropLocation}"></span></p>-->
+<!--        <p><b>Status:</b> <span th:text="${ride.status}"></span></p>-->
+<!--      </div>-->
 
-    // Markers
-    L.marker([pickup.lat, pickup.lng]).addTo(map)
-      .bindPopup("Pickup Location");
+<!--      &lt;!&ndash; MAP &ndash;&gt;-->
+<!--      <div id="map"></div>-->
 
-    L.marker([drop.lat, drop.lng]).addTo(map)
-      .bindPopup("Drop Location");
+<!--      &lt;!&ndash; Chat Button &ndash;&gt;-->
+<!--      <div class="text-center mt-4">-->
+<!--        <a th:href="@{/driver/chat(rideId=${ride.id})}" class="btn btn-primary px-4">-->
+<!--          💬 Chat with Rider-->
+<!--        </a>-->
+<!--      </div>-->
 
-    // Route Polyline
-    L.polyline(
-      [
-        [pickup.lat, pickup.lng],
-        [drop.lat, drop.lng]
-      ],
-      { color: "blue", weight: 4 }
-    ).addTo(map);
+<!--      &lt;!&ndash; Driver Actions &ndash;&gt;-->
+<!--      <div class="text-center mt-3">-->
 
-  });
-</script>
+<!--        &lt;!&ndash; Start Ride &ndash;&gt;-->
+<!--        <form th:if="${ride.status == 'Accepted'}"-->
+<!--              th:action="@{/driver/startRide/{rideId}(rideId=${ride.id})}" method="post" class="d-inline">-->
+<!--          <button type="submit" class="btn btn-warning px-4">Start Ride</button>-->
+<!--        </form>-->
+
+<!--        &lt;!&ndash; End Ride &ndash;&gt;-->
+<!--        <form th:if="${ride.status == 'Ongoing'}"-->
+<!--              th:action="@{/driver/endRide/{rideId}(rideId=${ride.id})}" method="post" class="d-inline">-->
+<!--          <input type="number" name="distance" step="0.1" placeholder="Distance (km)"-->
+<!--                 required class="form-control d-inline-block w-auto me-2">-->
+<!--          <button type="submit" class="btn btn-success px-4">End Ride</button>-->
+<!--        </form>-->
+
+<!--        &lt;!&ndash; Final End &ndash;&gt;-->
+<!--        <form th:if="${ride.status == 'Completed'}"-->
+<!--              th:action="@{/driver/updateLocation}" method="post" class="d-inline">-->
+<!--          <input type="hidden" name="rideId" th:value="${ride.id}">-->
+<!--          <input type="hidden" name="dropLocation" th:value="${ride.dropLocation}">-->
+<!--          <button type="submit" class="btn btn-success px-4">End Ride</button>-->
+<!--        </form>-->
+
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--  &lt;!&ndash; Leaflet Map Script &ndash;&gt;-->
+<!--  <script th:inline="javascript">-->
+<!--    document.addEventListener("DOMContentLoaded", async () => {-->
+
+<!--        const pickup = {-->
+<!--            lat: [[${ride.pickUpLatitude}]],-->
+<!--            lng: [[${ride.pickUpLongitude}]]-->
+<!--        };-->
+
+<!--        const drop = {-->
+<!--            lat: [[${ride.dropLatitude}]],-->
+<!--            lng: [[${ride.dropLongitude}]]-->
+<!--        };-->
+
+<!--        const rideId = [[${ride.id}]];-->
+
+<!--        // MAP-->
+<!--        const map = L.map("map").setView([pickup.lat, pickup.lng], 14);-->
+
+<!--        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png")-->
+<!--            .addTo(map);-->
+
+<!--        // Markers-->
+<!--        L.marker([pickup.lat, pickup.lng]).addTo(map).bindPopup("Pickup");-->
+<!--        L.marker([drop.lat, drop.lng]).addTo(map).bindPopup("Drop");-->
+
+<!--        // &#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;-->
+<!--        // 🚗 STEP 1: Get real road route from OSRM API-->
+<!--        // &#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;-->
+<!--        let url = `https://router.project-osrm.org/route/v1/driving/${pickup.lng},${pickup.lat};${drop.lng},${drop.lat}?overview=full&geometries=geojson`;-->
+
+<!--        const response = await fetch(url);-->
+<!--        const data = await response.json();-->
+
+<!--        const route = data.routes[0].geometry.coordinates;-->
+
+<!--        // Convert [lng, lat] → [lat, lng]-->
+<!--        const latLngRoute = route.map(coord => [coord[1], coord[0]]);-->
+
+<!--        // Draw polyline along road-->
+<!--        const routeLine = L.polyline(latLngRoute, {-->
+<!--            color: "blue",-->
+<!--            weight: 5-->
+<!--        }).addTo(map);-->
+
+<!--        // Fit map to route-->
+<!--        map.fitBounds(routeLine.getBounds());-->
+
+<!--        // &#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;-->
+<!--        // 🚕 STEP 2: Animate driver icon along the route-->
+<!--        // &#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;-->
+<!--        let driverIcon = L.icon({-->
+<!--            iconUrl: "https://cdn-icons-png.flaticon.com/512/854/854866.png",-->
+<!--            iconSize: [32, 32],-->
+<!--        });-->
+
+<!--        let driverMarker = L.marker(latLngRoute[0], { icon: driverIcon }).addTo(map);-->
+
+<!--        let index = 0;-->
+
+<!--        function animateDriver() {-->
+<!--            if (index >= latLngRoute.length) return;  // End animation-->
+
+<!--            driverMarker.setLatLng(latLngRoute[index]);-->
+
+<!--            // Send simulated location to backend-->
+<!--            fetch("/driver/updateLocationLive", {-->
+<!--                method: "POST",-->
+<!--                headers: { "Content-Type": "application/json" },-->
+<!--                body: JSON.stringify({-->
+<!--                    rideId: rideId,-->
+<!--                    lat: latLngRoute[index][0],-->
+<!--                    lng: latLngRoute[index][1]-->
+<!--                })-->
+<!--            });-->
+
+<!--            index++;-->
+<!--            requestAnimationFrame(animateDriver); // smooth animation-->
+<!--        }-->
+
+<!--        animateDriver();  // Start animation-->
+
+<!--    });-->
+<!--  </script>-->
+
+<!--</section>-->
+
+
+
 
 </body>
 </html>
