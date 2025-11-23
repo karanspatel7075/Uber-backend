@@ -131,7 +131,9 @@ public class DriverController {
 
         model.addAttribute("driverEmail", email);
         model.addAttribute("riderEmail", rider.getEmail());
-        return "driver/driverChat";
+        model.addAttribute("sessionJwt", token); // ⚡ Important for WebSocket
+
+        return "chat_page";
     }
 
 

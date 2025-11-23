@@ -1,6 +1,7 @@
 package com.example.Navio.message;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -13,33 +14,40 @@ import java.util.Map;
 public class RedisChatSubscriber {
 
     private final SimpMessagingTemplate messagingTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
-    public RedisChatSubscriber(SimpMessagingTemplate messagingTemplate) {
+    public RedisChatSubscriber(SimpMessagingTemplate messagingTemplate, ObjectMapper objectMapper) {
         this.messagingTemplate = messagingTemplate;
+
+        // 1. Initialize ObjectMapper
+        this.objectMapper = new ObjectMapper();
+        // 2. Register the JSR310 module to handle Instant
+        this.objectMapper.registerModule(new JavaTimeModule());
     }
 
-        public void handleMessage(String message) {
-            try {
-                Map<String, Object> map = objectMapper.readValue(message, Map.class);
+    // Corrected RedisChatSubscriber.java
+    public void handleMessage(String jsonMessage) {
+        try {
+            // 1. Read the JSON back into a ChatMessage object
+            ChatMessage message = objectMapper.readValue(jsonMessage, ChatMessage.class);
 
-                // Type of event (CHAT)
-                String type = (String) map.get("type");
+            String recipient = message.getRecipient();
+            log.info("📨 Forwarding chat message to user: {}", recipient);
 
-                if ("CHAT".equals(type)) {
-                    String recipient = (String) map.get("recipient");
+            // --- FINAL ATTEMPT FIX ---
+            // Instead of sending the POJO (message), which Spring will serialize again,
+            // serialize it to a clean JSON string BEFORE sending via WebSocket.
+            String messageJson = objectMapper.writeValueAsString(message);
 
-                    log.info("📨 Forwarding chat message to user: {}", recipient);
+            // 2. Forward the complete ChatMessage object as a STRING
+            messagingTemplate.convertAndSendToUser(
+                    recipient,
+                    "/queue/messages",
+                    messageJson // Send the clean JSON string
+            );
 
-                    messagingTemplate.convertAndSendToUser(
-                            recipient,
-                            "/queue/messages",
-                            map
-                    );
-                }
-
-            } catch (Exception e) {
-                log.error("❌ Error processing Redis chat message", e);
-            }
+        } catch (Exception e) {
+            // ...
         }
+    }
 }

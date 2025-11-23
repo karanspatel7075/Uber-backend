@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Navio Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <style>
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+<div id="map"></div>
+
+<script>
+    // Initialize map
+    var map = L.map('map').setView([20.3974, 72.8328], 13); // Vapi default
+
+    // Add OSM tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+    }).addTo(map);
+
+    // Add marker
+    var marker = L.marker([20.3974, 72.8328]).addTo(map);
+    marker.bindPopup("You are here").openPopup();
+</script>
+</body>
+</html>

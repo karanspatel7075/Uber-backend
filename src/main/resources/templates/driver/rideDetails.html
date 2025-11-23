@@ -5,14 +5,29 @@
 <head>
   <meta charset="UTF-8">
   <title>Ride Details | Navio</title>
+
+  <!-- Bootstrap -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+
+  <!-- Leaflet CSS + JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <style>
+    #map {
+      height: 350px;
+      width: 100%;
+      border-radius: 12px;
+      margin-top: 15px;
+    }
+  </style>
 </head>
 
 <body>
 <section>
   <div class="container mt-5">
     <div class="card shadow-lg p-4 rounded-4">
+
       <h3 class="text-center mb-4">Ride Details</h3>
 
       <div>
@@ -22,30 +37,34 @@
         <p><b>Status:</b> <span th:text="${ride.status}"></span></p>
       </div>
 
-      <!-- Google Map -->
+      <!-- MAP -->
+      <div id="map"></div>
+
+      <!-- Chat Button -->
       <div class="text-center mt-4">
         <a th:href="@{/driver/chat(rideId=${ride.id})}" class="btn btn-primary px-4">
           💬 Chat with Rider
         </a>
       </div>
 
+      <!-- Driver Actions -->
+      <div class="text-center mt-3">
 
-      <!-- Buttons -->
-      <div class="text-center">
+        <!-- Start Ride -->
         <form th:if="${ride.status == 'Accepted'}"
               th:action="@{/driver/startRide/{rideId}(rideId=${ride.id})}" method="post" class="d-inline">
-          <input type="hidden" name="rideId" th:value="${ride.id}">
           <button type="submit" class="btn btn-warning px-4">Start Ride</button>
         </form>
 
+        <!-- End Ride -->
         <form th:if="${ride.status == 'Ongoing'}"
               th:action="@{/driver/endRide/{rideId}(rideId=${ride.id})}" method="post" class="d-inline">
-          <input type="hidden" name="rideId" th:value="${ride.id}">
-          <input type="number" name="distance" step="0.1" min="0"
-                 placeholder="Distance (km)" required class="form-control d-inline-block w-auto me-2">
+          <input type="number" name="distance" step="0.1" placeholder="Distance (km)"
+                 required class="form-control d-inline-block w-auto me-2">
           <button type="submit" class="btn btn-success px-4">End Ride</button>
         </form>
 
+        <!-- Final End -->
         <form th:if="${ride.status == 'Completed'}"
               th:action="@{/driver/updateLocation}" method="post" class="d-inline">
           <input type="hidden" name="rideId" th:value="${ride.id}">
@@ -58,30 +77,40 @@
   </div>
 </section>
 
+<!-- Leaflet Map Script -->
 <script>
-  function initMap() {
-    const pickup = { lat: 20.385, lng: 72.912 }; // dummy coords
+  document.addEventListener("DOMContentLoaded", () => {
+
+    // TODO: Replace with actual backend coordinates
+    const pickup = { lat: 20.385, lng: 72.912 };
     const drop = { lat: 20.42, lng: 72.93 };
 
-    const map = new google.maps.Map(document.getElementById("map"), {
-      zoom: 12,
-      center: pickup,
-    });
+    // Map Init
+    const map = L.map("map").setView([pickup.lat, pickup.lng], 13);
 
-    new google.maps.Marker({ position: pickup, map: map, label: "P" });
-    new google.maps.Marker({ position: drop, map: map, label: "D" });
+    // Tile Layer
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "© OpenStreetMap"
+    }).addTo(map);
 
-    new google.maps.Polyline({
-      path: [pickup, drop],
-      geodesic: true,
-      strokeColor: "#007bff",
-      strokeOpacity: 0.8,
-      strokeWeight: 4,
-      map: map,
-    });
-  }
+    // Markers
+    L.marker([pickup.lat, pickup.lng]).addTo(map)
+      .bindPopup("Pickup Location");
 
-  window.onload = initMap;
+    L.marker([drop.lat, drop.lng]).addTo(map)
+      .bindPopup("Drop Location");
+
+    // Route Polyline
+    L.polyline(
+      [
+        [pickup.lat, pickup.lng],
+        [drop.lat, drop.lng]
+      ],
+      { color: "blue", weight: 4 }
+    ).addTo(map);
+
+  });
 </script>
 
 </body>

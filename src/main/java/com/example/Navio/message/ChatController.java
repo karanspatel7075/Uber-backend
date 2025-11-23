@@ -37,11 +37,11 @@ public class ChatController {
 
         // send to recipient's private queue
         // Optionally send locally too (fast-path)
-        messagingTemplate.convertAndSendToUser(
-                message.getRecipient(),
-                "/queue/messages",
-                saved
-        );
+//        messagingTemplate.convertAndSendToUser(
+//                message.getRecipient(),
+//                "/queue/messages",
+//                saved
+//        );
     }
 
 

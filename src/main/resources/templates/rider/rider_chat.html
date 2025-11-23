@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Live Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+    <style>
+        /* Ensures the chat box is easy to see and scrollable */
+        #chat-box {
+            height: 70vh; /* Viewport height for a larger chat area */
+            max-height: 500px;
+            overflow-y: auto;
+            display: flex; /* Use flexbox to ensure bottom-scrolling works */
+            flex-direction: column;
+        }
+        /* Style for the message text itself */
+        .chat-message-bubble {
+             /* Ensures message stays within the chat box width */
+            max-width: 75%;
+            padding: 8px 12px;
+            border-radius: 20px;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4">
+
+<div class="w-full max-w-xl bg-white shadow-2xl rounded-xl border border-gray-200">
+    <header class="bg-blue-600 text-white text-center py-4 text-xl font-semibold rounded-t-xl">
+        Chat: <span th:text="${isRider} ? 'Rider' : 'Driver'">Role</span>
+    </header>
+
+    <div id="chat-box" class="p-4 space-y-3">
+    </div>
+
+    <div class="border-t border-gray-200 p-4 flex items-center">
+        <input id="messageInput"
+               type="text"
+               placeholder="Type your message..."
+               class="flex-1 border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring focus:ring-blue-400">
+        <button onclick="sendMessage()"
+                class="ml-2 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition">
+            Send
+        </button>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    let stompClient = null;
+
+    // 1. Define Variables using Thymeleaf
+    const myEmail = [[${isRider} ? ${riderEmail} : ${driverEmail}]];
+    const otherEmail = [[${isRider} ? ${driverEmail} : ${riderEmail}]];
+    const sessionJwt = [[${session.jwtToken}]];
+
+    // Check if variables are properly injected
+    if (!myEmail || !otherEmail || !sessionJwt) {
+        console.error("❌ Thymeleaf variables missing/null:", {myEmail, otherEmail, sessionJwt});
+    } else {
+        console.log(`✅ Initialized chat for: ${myEmail}. Talking to: ${otherEmail}`);
+    }
+
+    // 2. Connection Function
+    function connect() {
+        const socket = new SockJS('/ws?token=' + sessionJwt);
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, (frame) => {
+            console.log("✅ WebSocket CONNECTED.");
+
+            // Subscribe to private queue: /user/queue/messages
+            stompClient.subscribe("/user/queue/messages", (message) => {
+
+                // CRITICAL DEBUG: Use this log to see the raw data
+                // console.log("--- RECEIVED RAW BODY ---", message.body);
+
+                try {
+                    const msg = JSON.parse(message.body);
+                    // console.log("PARSED OBJECT:", msg); // DEBUG parsed object
+
+                    showMessage(
+                        msg.content,
+                        // If the message sender is ME, it's outgoing (server echo). Otherwise, it's incoming.
+                        msg.sender === myEmail ? 'outgoing' : 'incoming'
+                    );
+
+                } catch (e) {
+                    // This error is the cause of all problems if the log above is present!
+                    console.error("❌ FAILED TO PARSE MESSAGE JSON from WebSocket:", e);
+                }
+            });
+        }, (error) => {
+            console.error("❌ WebSocket Connection Error:", error);
+            console.log("🔄 Attempting to reconnect in 3 seconds...");
+            setTimeout(connect, 3000);
+        });
+    }
+
+    // 3. Send Chat Message
+    function sendMessage() {
+        const messageInput = document.getElementById("messageInput");
+        const content = messageInput.value.trim();
+
+        if (content && stompClient) {
+            const chatMessage = {
+                sender: myEmail,          // My email
+                recipient: otherEmail,    // Other person's email
+                content: content,
+            };
+
+            // 1. Send message to /app/chat (which publishes to Redis)
+            stompClient.send("/app/chat", {}, JSON.stringify(chatMessage));
+
+            // 2. Display locally immediately (The 'Fast Path')
+            showMessage(content, 'outgoing');
+
+            messageInput.value = "";
+        }
+    }
+
+    // 4. Display Messages (Consistent UI)
+    function showMessage(text, type) {
+        const chatBox = document.getElementById("chat-box");
+        const messageWrapper = document.createElement("div");
+
+        if (type === 'outgoing') {
+            // My message (blue bubble, right side)
+            messageWrapper.className = "flex justify-end";
+            messageWrapper.innerHTML =
+                `<span class='chat-message-bubble bg-blue-600 text-white shadow-md'>${text}</span>`;
+        } else {
+            // Their message (gray bubble, left side)
+            messageWrapper.className = "flex justify-start";
+            messageWrapper.innerHTML =
+                `<span class='chat-message-bubble bg-gray-200 text-gray-800 shadow-md'>${text}</span>`;
+        }
+
+        chatBox.appendChild(messageWrapper);
+        // Scroll to the latest message
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // 5. Auto-connect and Enter key handler
+    document.addEventListener("DOMContentLoaded", () => {
+        connect();
+        const input = document.getElementById("messageInput");
+        input.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    });
+    /*]]>*/
+</script>
+
+</body>
+</html>

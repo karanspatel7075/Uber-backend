@@ -1,40 +1,43 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:fragment="Layout(content)">
+
 <head>
   <meta charset="UTF-8">
   <title>Uber Application</title>
 
   <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet">
 
   <!-- Local CSS -->
   <link rel="stylesheet" href="/css/style.css">
 
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
   <style>
     body {
-      font-family: 'Uber Move Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    }
-
-    #map {
-      height: 100%;
-      width: 100%;
+        font-family: 'Uber Move Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     }
   </style>
 </head>
+
 <body>
+
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
   <div class="container-fluid d-flex justify-content-between align-items-center py-2">
     <div class="d-flex align-items-center gap-4">
-      <div class="text-white fs-4 fw-bold"><a href=""> Uber</a></div>
+      <div class="text-white fs-4 fw-bold"><a href="/" class="text-white text-decoration-none">Uber</a></div>
+
       <div class="d-none d-md-flex gap-3">
         <a href="/rider/requestRide" class="text-white text-decoration-none">Ride</a>
         <a href="/driver/apply" class="text-white text-decoration-none">Drive</a>
@@ -42,20 +45,25 @@
         <a href="/uber/about" class="text-white text-decoration-none">About</a>
         <a href="/wallet/details" class="text-white text-decoration-none">Wallet</a>
 
-        <th:block th:if="${user==null}">
-        <a href="/uber/login" class="text-white text-decoration-none">Login</a>
-        <a href="/uber/register" class="text-white text-decoration-none">Registration</a>
+        <!-- Show login/register if user not logged in -->
+        <th:block th:if="${user == null}">
+          <a href="/uber/login" class="text-white text-decoration-none">Login</a>
+          <a href="/uber/register" class="text-white text-decoration-none">Registration</a>
         </th:block>
       </div>
     </div>
+
     <div class="d-flex align-items-center gap-3">
       <button class="btn btn-sm btn-light">EN</button>
       <a href="#" class="text-white text-decoration-none">Help</a>
+
       <div class="d-flex align-items-center gap-2">
         <div class="bg-light text-dark rounded-circle d-flex align-items-center justify-content-center"
              style="width: 32px; height: 32px;">
           <i class="fa-solid fa-users"></i>
         </div>
+
+        <!-- If user is logged in -->
         <th:block th:if="${user != null}">
           <a href="/uber/profile" class="text-white fw-semibold d-none d-lg-inline">
             [[${user.name}]]
@@ -69,10 +77,11 @@
   </div>
 </nav>
 
-<!-- Main Content -->
+<!-- Main Dynamic Content -->
 <div th:replace="${content}"></div>
 
-<!-- Bootstrap JS Bundle -->
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>

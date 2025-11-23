@@ -1,74 +1,80 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{base::Layout(~{::section})}">
-<head>
+
+<section>
+
+    <!-- PAGE TITLE -->
     <head>
         <meta charset="UTF-8">
         <title>Uber Application</title>
+
+        <!-- Tailwind -->
         <script src="https://cdn.tailwindcss.com"></script>
+
+        <!-- Leaflet -->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
         <style>
-            /* Custom font for a more Uber-like feel */
-            body {
-                font-family: 'Uber Move Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            }
-            /* Style for the map container to ensure it fills its parent */
             #map {
-                height: 100%;
                 width: 100%;
+                height: 400px;
             }
         </style>
     </head>
-<body class="font-sans text-gray-800">
-<section>
+
+    <body class="font-sans text-gray-800">
 
     <main class="flex flex-col md:flex-row min-h-[calc(100vh-64px)]">
-        <!-- Left Content -->
+
+        <!-- LEFT SIDE -->
         <div class="md:w-1/2 p-10 lg:p-20 flex flex-col justify-center">
             <h1 class="text-4xl sm:text-5xl font-bold leading-tight mb-4">
                 Get ready for your first trip
             </h1>
             <p class="text-lg text-gray-600 max-w-lg mb-8">
-                Discover the convenience of Uber. Request a ride now, or schedule one for later directly from your browser.
+                Discover the convenience of Uber. Request a ride now, or schedule one for later.
             </p>
             <div class="space-y-4 max-w-sm">
                 <div class="relative">
                     <div class="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black h-2 w-2 rounded-full"></div>
-                    <input type="text" placeholder="Pickup location" class="w-full pl-8 py-3 pr-4 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black">
-                    <button class="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1.5-6.5a.5.5 0 011 0v3.5a.5.5 0 01-1 0v-3.5zm3.5-3a.5.5 0 00-1 0v3.5a.5.5 0 001 0v-3.5z" clip-rule="evenodd" />
-                        </svg>
-                    </button>
+                    <input type="text" placeholder="Pickup location"
+                           class="w-full pl-8 py-3 pr-4 rounded border border-gray-300 focus:ring-2 focus:ring-black">
                 </div>
+
                 <div class="relative">
                     <div class="absolute left-3 top-1/2 transform -translate-y-1/2 bg-gray-400 h-2 w-2"></div>
-                    <input type="text" placeholder="Dropoff location" class="w-full pl-8 py-3 pr-4 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black">
+                    <input type="text" placeholder="Dropoff location"
+                           class="w-full pl-8 py-3 pr-4 rounded border border-gray-300 focus:ring-2 focus:ring-black">
                 </div>
-                <button class="w-full bg-black text-white py-4 rounded font-semibold text-lg hover:bg-gray-800 transition-colors duration-200">
+
+                <button class="w-full bg-black text-white py-4 rounded font-semibold hover:bg-gray-800">
                     See prices
                 </button>
             </div>
         </div>
 
-        <!-- Right Map Image -->
+        <!-- RIGHT SIDE: MAP -->
         <div class="md:w-1/2 flex items-center justify-center p-6">
-            <div id="map" class="w-full max-w-xl h-96 rounded-lg shadow-md"></div>
+            <div id="map" class="w-full max-w-xl rounded-lg shadow-md"></div>
         </div>
-
 
     </main>
 
+    <!-- BELOW SECTIONS (KEEPING YOUR CONTENT) -->
     <div class="container mx-auto px-4 py-16 lg:px-20">
         <h2 class="text-3xl lg:text-4xl font-bold mb-12 text-center">
             Book your trip on your phone or computer
         </h2>
 
+        <!-- All your sections here (unchanged) -->
         <!-- Wrapper for all 3 sections with vertical spacing -->
         <div class="space-y-8">
             <!-- Section 1 -->
             <div class="flex flex-col lg:flex-row items-center lg:items-start lg:space-x-12">
                 <div class="w-full lg:w-1/2 mb-8 lg:mb-0 flex justify-center">
-                    <img src="https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_254,w_450/v1740756046/assets/ac/584f92-4bf8-466c-8d2f-f549556e0aed/original/mobile-request.png"
+                    <img src="images/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC91ZGFtLWFzc2V0cy9kYzY0NGQzMS04NmRiLTQyNTAtODdlZC0yNDFhMTJiOTUxYmQucG5n.webp"
                          alt="Add your trip details"
                          class="rounded-lg shadow-md w-96">
                 </div>
@@ -83,7 +89,7 @@
             <!-- Section 2 -->
             <div class="flex flex-col lg:flex-row items-center lg:items-start lg:space-x-12">
                 <div class="w-full lg:w-1/2 mb-8 lg:mb-0 flex justify-center">
-                    <img src="https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_254,w_450/v1740756086/assets/0b/48199f-77c1-4078-8f06-1e4d996e4c51/original/mobile-payment.png"
+                    <img src="images/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC91ZGFtLWFzc2V0cy9hM2NmODU2NC1lMmE2LTQxOGMtYjliMC02NWRkMjg1YzEwMGIuanBn.webp"
                          alt="Pay easily"
                          class="rounded-lg shadow-md w-96">
                 </div>
@@ -98,7 +104,7 @@
             <!-- Section 3 -->
             <div class="flex flex-col lg:flex-row items-center lg:items-start lg:space-x-12">
                 <div class="w-full lg:w-1/2 mb-8 lg:mb-0 flex justify-center">
-                    <img src="https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_254,w_450/v1740756134/assets/cb/cca6d5-fd79-4f63-abd4-c76f4ea42de3/original/mobile-driver.png"
+                    <img src="images/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC91ZGFtLWFzc2V0cy8yZTE0ZTZkZC00Y2QzLTQwZGEtYTNmMi01OTEyYjI0YTdmNWYucG5n.webp"
                          alt="Meet your driver"
                          class="rounded-lg shadow-md w-96">
                 </div>
@@ -112,11 +118,29 @@
         </div>
     </div>
 
-
     <footer class="bg-gray-900 text-white text-center py-4">
         <p class="text-sm">&copy; 2025 Uber Clone. All Rights Reserved.</p>
     </footer>
 
+    </body>
+
+
+    <!-- Leaflet MAP SCRIPT -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const map = L.map('map').setView([20.3974, 72.8328], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            L.marker([20.3974, 72.8328]).addTo(map)
+                .bindPopup("Your default location")
+                .openPopup();
+        });
+    </script>
+
 </section>
-</body>
+
 </html>

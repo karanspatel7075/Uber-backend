@@ -9,20 +9,15 @@
 </head>
 <body class="bg-gray-100 flex flex-col h-screen">
 
-<!-- Header -->
 <header class="bg-blue-600 text-white text-center py-4 text-xl font-semibold shadow-md">
     Rider-Driver Chat
 </header>
 
-<!-- Chat Container -->
 <div class="flex-1 flex flex-col justify-between max-w-3xl mx-auto w-full bg-white shadow-lg mt-6 rounded-2xl border border-gray-200">
 
-    <!-- Messages Area -->
     <div id="chat-box" class="flex-1 p-4 overflow-y-auto space-y-2">
-        <!-- Messages appear here -->
     </div>
 
-    <!-- Input Area -->
     <div class="border-t border-gray-200 p-4 flex items-center">
         <input id="messageInput"
                type="text"
@@ -36,58 +31,68 @@
 </div>
 
 <script th:inline="javascript">
+    /*<![CDATA[*/
     let stompClient = null;
 
-    // Extract sender (logged-in user's email)
-    let sender = /*[[${riderEmail}]]*/ "";  // or driverEmail depending on page
-    let driverEmail = /*[[${driverEmail}]]*/ "";
+    // 1. Define Variables (Robust Thymeleaf Text Inlining)
+    const riderEmail = [[${riderEmail}]];
+    const driverEmail = [[${driverEmail}]];
+    const sessionJwt = [[${session.jwtToken}]];
 
-<!--let sender = /*[[${riderEmail}]]*/ null;-->
-<!--let driverEmail = /*[[${driverEmail}]]*/ null;-->
-<!--let sessionJwt = /*[[${session.jwtToken}]]*/ null;-->
+    // Set the sender for this page
+    const sender = riderEmail;
 
-if (!driverEmail || !sender) {
-    console.error("❌ Thymeleaf variables missing");
-}
+    if (!driverEmail || !sender || !sessionJwt) {
+        console.error("❌ Thymeleaf variables missing/null:", {riderEmail, driverEmail, sessionJwt});
+    }
 
-
-    // JWT for WebSocket handshake
-    let sessionJwt = /*[[${session.jwtToken}]]*/ "";
-
+    // 2. Connection Function
     function connect() {
-
-        // ✅ FIX: create correct SockJS object
         const socket = new SockJS('/ws?token=' + sessionJwt);
-
-        // ✅ FIX: pass socket correctly
         stompClient = Stomp.over(socket);
 
         stompClient.connect({}, (frame) => {
-            console.log("✅ WebSocket Connected:", frame);
+            console.log("✅ WebSocket Connected as Rider:", sender);
 
-            // Subscribe to private queue
+            // Subscribe to private queue: /user/queue/messages
+
             stompClient.subscribe("/user/queue/messages", (message) => {
-                const msg = JSON.parse(message.body);
+    // Inject these two lines temporarily for debugging:
+    console.log("--- RECEIVED MESSAGE ---");
+    console.log("RAW BODY:", message.body);
 
-                showMessage(
-                    msg.content,
-                    msg.sender === sender ? 'outgoing' : 'incoming'
-                );
-            });
+    try {
+        const msg = JSON.parse(message.body);
+        console.log("PARSED OBJECT:", msg);
+
+        // This is the line that handles display
+        showMessage(
+            msg.content,
+            msg.sender === riderEmail ? 'outgoing' : 'incoming'
+        );
+
+    } catch (e) {
+        // This will tell you if the JSON parsing is failing
+        console.error("❌ FAILED TO PARSE MESSAGE JSON:", e);
+    }
+});
+        }, (error) => {
+            console.error("❌ WebSocket Connection Error:", error);
+            console.log("🔄 Reconnecting in 3 seconds...");
+            setTimeout(connect, 3000);
         });
     }
 
-    // Send chat message
+    // 3. Send Chat Message
     function sendMessage() {
         const messageInput = document.getElementById("messageInput");
         const content = messageInput.value.trim();
 
         if (content && stompClient) {
             const chatMessage = {
-                sender: sender,
-                recipient: driverEmail,   // rider page OR driver page
+                sender: sender,          // Rider's email
+                recipient: driverEmail,  // Driver's email
                 content: content,
-                timestamp: new Date()
             };
 
             stompClient.send("/app/chat", {}, JSON.stringify(chatMessage));
@@ -96,17 +101,17 @@ if (!driverEmail || !sender) {
         }
     }
 
-    // Display messages
+    // 4. Display Messages (Consistent UI)
     function showMessage(text, type) {
         const chatBox = document.getElementById("chat-box");
         const messageDiv = document.createElement("div");
 
         if (type === 'outgoing') {
-            messageDiv.className = "text-right";
+            messageDiv.className = "text-right mb-1";
             messageDiv.innerHTML =
                 `<span class='inline-block bg-blue-600 text-white px-4 py-2 rounded-2xl max-w-xs break-words'>${text}</span>`;
         } else {
-            messageDiv.className = "text-left";
+            messageDiv.className = "text-left mb-1";
             messageDiv.innerHTML =
                 `<span class='inline-block bg-gray-200 text-gray-900 px-4 py-2 rounded-2xl max-w-xs break-words'>${text}</span>`;
         }
@@ -115,12 +120,19 @@ if (!driverEmail || !sender) {
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    connect();
+    // 5. Auto-connect and Enter key handler
+    document.addEventListener("DOMContentLoaded", () => {
+        connect();
+        const input = document.getElementById("messageInput");
+        input.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    });
+    /*]]>*/
 </script>
-
-<!-- JS: Thymeleaf inline so variables are injected -->
-
-
 
 </body>
 </html>

@@ -20,6 +20,9 @@ public class NearestDriverStrategy implements DriverMatchingStrategy {
     @Autowired
     private DriverRepository driverRepository;
 
+    @Autowired
+    private CityCoordinatesService cityCoordinatesService;
+
 //    GeoHash → Fast filtering
 //    Haversine → Exact distance
 //    We will add the Geohashing login afterward at large scale data
@@ -32,7 +35,7 @@ public class NearestDriverStrategy implements DriverMatchingStrategy {
         }
 
         // Step 1: Convert pickup city name to coordinates
-        double[] pickupCoords = getCoordinates(rideRequestDto.getPickUpLocation());
+        double[] pickupCoords = cityCoordinatesService.getCoordinates(rideRequestDto.getPickUpLocation());
         double lat = pickupCoords[0];
         double lon = pickupCoords[1];
 

@@ -38,7 +38,8 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(loginRequestDto.getEmail(), loginRequestDto.getPassword())
         );
 
-//      Once authentication succeeds, Spring returns an Authentication object that holds: the user’s details (User) the roles/authorities
+//      Once authentication succeeds, Spring returns an Authentic6+3
+//      .ation object that holds: the user’s details (User) the roles/authorities
         User user = (User) authentication.getPrincipal();
 
         String token = authTokenGen.generateAccessToken(user);

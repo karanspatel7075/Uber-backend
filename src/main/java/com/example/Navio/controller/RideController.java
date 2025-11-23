@@ -164,6 +164,11 @@ public class RideController {
         return "redirect:/rider/dashboard";
     }
 
+    @GetMapping("/map")
+    public String getMapping() {
+        return "map";
+    }
+
     @RequestMapping("/favicon.ico")
     @ResponseBody
     public void disableFavicon() {
@@ -185,9 +190,11 @@ public class RideController {
 
         model.addAttribute("driverEmail", driver.getUser().getEmail());
         model.addAttribute("riderEmail", email);
+        model.addAttribute("sessionJwt", token); // ⚡ Important for WebSocket
+
 
         logger.info("✅ Chat page model prepared successfully.");
-        return "rider/riderChat";
+        return "chat_page";
     }
 
 }

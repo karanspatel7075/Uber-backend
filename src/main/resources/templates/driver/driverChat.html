@@ -1,123 +1,208 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-  <meta charset="UTF-8">
-  <title>Driver Chat</title>
-  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-<div class="w-full max-w-2xl bg-white shadow-lg rounded-xl p-6">
-  <h2 class="text-2xl font-semibold mb-4 text-center">Chat with Rider</h2>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{base::Layout(~{::section})}">
 
-  <div id="chatBox" class="border h-80 overflow-y-auto p-3 rounded-md bg-gray-50 mb-4"></div>
+<section>
 
-  <div class="flex space-x-2">
-    <input id="messageInput" type="text" placeholder="Type your message..."
-           class="flex-grow border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
-    <button onclick="sendMessage()"
-            class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Send</button>
+  <head>
+    <meta charset="UTF-8">
+    <title>Driver Chat</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+  <div class="w-full max-w-2xl bg-white shadow-lg rounded-xl p-6">
+    <h2 class="text-2xl font-semibold mb-4 text-center">Chat with Rider</h2>
+
+    <div id="chatBox" class="border h-80 overflow-y-auto p-3 rounded-md bg-gray-50 mb-4 space-y-2"></div>
+
+    <div class="flex space-x-2">
+      <input id="messageInput" type="text" placeholder="Type your message..."
+             class="flex-grow border border-gray-300 rounded-md px-3 py-2">
+      <button onclick="sendMessage()"
+              class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Send</button>
+    </div>
   </div>
-</div>
 
-<script th:inline="javascript">
+  <script th:inline="javascript">
+    let stompClient = null;
 
-<!--  const driverEmail = /*[[${driverEmail}]]*/ "";-->
-<!--  const riderEmail  = /*[[${riderEmail}]]*/ "";-->
+    const driverEmail = [[${driverEmail}]];
+    const riderEmail = [[${riderEmail}]];
+    const sessionJwt = [[${session.jwtToken}]];
 
-let driverEmail = /*[[${driverEmail}]]*/ null;
-let riderEmail = /*[[${riderEmail}]]*/ null;
-<!--let sessionJwt = /*[[${session.jwtToken}]]*/ null;-->
-
-if (!driverEmail || !riderEmail) {
-    console.error("❌ Thymeleaf variables missing");
-}
-
-
-  let stompClient = null;
-
-  // JWT for WebSocket handshake
-    let sessionJwt = /*[[${session.jwtToken}]]*/ "";
-
-  function connectWebSocket() {
-
-      // ✅ FIX: create correct SockJS object
+    function connect() {
         const socket = new SockJS('/ws?token=' + sessionJwt);
-
-        // ✅ FIX: pass socket correctly
         stompClient = Stomp.over(socket);
 
-      stompClient.connect({}, function () {
-          console.log("✅ Connected as driver:", driverEmail);
+        stompClient.connect({}, (frame) => {
+            stompClient.subscribe("/user/queue/messages", (message) => {
+                const msg = JSON.parse(message.body);
+                showMessage(msg.content, msg.sender === driverEmail ? 'outgoing' : 'incoming');
+            });
+        });
+    }
 
-          stompClient.subscribe("/user/queue/messages", function (message) {
-              const msg = JSON.parse(message.body);
-              showMessage(msg.sender + ": " + msg.content);
-          });
-      }, function (error) {
-          console.error("❌ WebSocket Connection Error:", error);
-          console.log("🔄 Reconnecting in 3 seconds...");
-          setTimeout(connectWebSocket, 3000);
-      });
-  }
+    function sendMessage() {
+        const msgInput = document.getElementById("messageInput");
+        const message = msgInput.value.trim();
+        if (!message) return;
 
-  connectWebSocket(); // 🔥 Auto-connect on page load
+        stompClient.send("/app/chat", {}, JSON.stringify({
+            sender: driverEmail,
+            recipient: riderEmail,
+            content: message
+        }));
 
+        showMessage(message, 'outgoing');
+        msgInput.value = "";
+    }
 
-  // -----------------------------
-  // SEND MESSAGE
-  // -----------------------------
-  function sendMessage() {
-      const msgInput = document.getElementById("messageInput");
-      const message = msgInput.value.trim();
+    function showMessage(text, type) {
+        const chatBox = document.getElementById("chatBox");
+        const messageDiv = document.createElement("div");
 
-      if (!message) return;
+        messageDiv.className =
+            type === 'outgoing' ? "text-right mb-1" : "text-left mb-1";
 
-      const chatMessage = {
-          sender: driverEmail,
-          recipient: riderEmail,
-          content: message
-      };
+        messageDiv.innerHTML =
+            type === 'outgoing'
+                ? `<span class='inline-block bg-blue-600 text-white px-4 py-2 rounded-2xl'>${text}</span>`
+                : `<span class='inline-block bg-gray-200 text-gray-900 px-4 py-2 rounded-2xl'>${text}</span>`;
 
-      stompClient.send("/app/chat", {}, JSON.stringify(chatMessage));
+        chatBox.appendChild(messageDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
-      showMessage("You: " + message);
+    document.addEventListener("DOMContentLoaded", connect);
+  </script>
 
-      msgInput.value = "";
-  }
+  </body>
 
-
-  // Press Enter to Send
-  document.addEventListener("DOMContentLoaded", () => {
-      const input = document.getElementById("messageInput");
-
-      input.addEventListener("keydown", function (e) {
-          if (e.key === "Enter") {
-              e.preventDefault();
-              sendMessage();
-          }
-      });
-  });
-
-
-  // -----------------------------
-  // DISPLAY CHAT MESSAGE
-  // -----------------------------
-  function showMessage(message) {
-      const chatBox = document.getElementById("chatBox");
-      const p = document.createElement("p");
-
-      p.classList.add("mb-1");
-      p.textContent = message;
-
-      chatBox.appendChild(p);
-      chatBox.scrollTop = chatBox.scrollHeight;
-  }
-
-</script>
-
-
-
-</body>
+</section>
 </html>
+
+
+
+
+<!--<!DOCTYPE html>-->
+<!--<html lang="en" xmlns:th="http://www.thymeleaf.org">-->
+<!--<head>-->
+<!--  <meta charset="UTF-8">-->
+<!--  <title>Driver Chat</title>-->
+<!--  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>-->
+<!--  <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>-->
+<!--  <script src="https://cdn.tailwindcss.com"></script>-->
+<!--</head>-->
+<!--<body class="bg-gray-100 flex items-center justify-center min-h-screen">-->
+
+<!--<div class="w-full max-w-2xl bg-white shadow-lg rounded-xl p-6">-->
+<!--  <h2 class="text-2xl font-semibold mb-4 text-center">Chat with Rider</h2>-->
+
+<!--  <div id="chatBox" class="border h-80 overflow-y-auto p-3 rounded-md bg-gray-50 mb-4 space-y-2"></div>-->
+
+<!--  <div class="flex space-x-2">-->
+<!--    <input id="messageInput" type="text" placeholder="Type your message..."-->
+<!--           class="flex-grow border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">-->
+<!--    <button onclick="sendMessage()"-->
+<!--            class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Send</button>-->
+<!--  </div>-->
+<!--</div>-->
+
+<!--<script th:inline="javascript">-->
+<!--  /*<![CDATA[*/-->
+<!--  let stompClient = null;-->
+
+<!--  // 1. Define Variables (Robust Thymeleaf Text Inlining)-->
+<!--  const driverEmail = [[${driverEmail}]];-->
+<!--  const riderEmail = [[${riderEmail}]];-->
+<!--  const sessionJwt = [[${session.jwtToken}]];-->
+
+<!--  if (!driverEmail || !riderEmail || !sessionJwt) {-->
+<!--      console.error("❌ Thymeleaf variables missing/null:", {riderEmail, driverEmail, sessionJwt});-->
+<!--  }-->
+
+<!--  // 2. Connection Function-->
+<!--  function connect() {-->
+<!--      const socket = new SockJS('/ws?token=' + sessionJwt);-->
+<!--      stompClient = Stomp.over(socket);-->
+
+<!--      stompClient.connect({}, (frame) => {-->
+<!--          console.log("✅ Connected as driver:", driverEmail);-->
+
+<!--          // Subscribe to private queue: /user/queue/messages-->
+<!--          stompClient.subscribe("/user/queue/messages", (message) => {-->
+<!--              const msg = JSON.parse(message.body);-->
+
+<!--              // Check if the message was sent by the current user (driverEmail)-->
+<!--              showMessage(-->
+<!--                  msg.content,-->
+<!--                  msg.sender === driverEmail ? 'outgoing' : 'incoming'-->
+<!--              );-->
+<!--          });-->
+<!--      }, (error) => {-->
+<!--          console.error("❌ WebSocket Connection Error:", error);-->
+<!--          console.log("🔄 Reconnecting in 3 seconds...");-->
+<!--          setTimeout(connect, 3000);-->
+<!--      });-->
+<!--  }-->
+
+<!--  // 3. Send Chat Message-->
+<!--  function sendMessage() {-->
+<!--      const msgInput = document.getElementById("messageInput");-->
+<!--      const message = msgInput.value.trim();-->
+
+<!--      if (!message || !stompClient) return;-->
+
+<!--      const chatMessage = {-->
+<!--          sender: driverEmail,      // Driver is the sender-->
+<!--          recipient: riderEmail,    // Rider is the recipient-->
+<!--          content: message-->
+<!--      };-->
+
+<!--      stompClient.send("/app/chat", {}, JSON.stringify(chatMessage));-->
+
+<!--      // Display locally immediately as 'outgoing'-->
+<!--      showMessage(message, 'outgoing');-->
+
+<!--      msgInput.value = "";-->
+<!--  }-->
+
+<!--  // 4. Display Messages (Consistent UI)-->
+<!--  function showMessage(text, type) {-->
+<!--      const chatBox = document.getElementById("chatBox");-->
+<!--      const messageDiv = document.createElement("div");-->
+
+<!--      if (type === 'outgoing') {-->
+<!--          messageDiv.className = "text-right mb-1";-->
+<!--          messageDiv.innerHTML =-->
+<!--              `<span class='inline-block bg-blue-600 text-white px-4 py-2 rounded-2xl max-w-xs break-words'>${text}</span>`;-->
+<!--      } else {-->
+<!--          messageDiv.className = "text-left mb-1";-->
+<!--          messageDiv.innerHTML =-->
+<!--              `<span class='inline-block bg-gray-200 text-gray-900 px-4 py-2 rounded-2xl max-w-xs break-words'>${text}</span>`;-->
+<!--      }-->
+
+<!--      chatBox.appendChild(messageDiv);-->
+<!--      chatBox.scrollTop = chatBox.scrollHeight;-->
+<!--  }-->
+
+<!--  // 5. Auto-connect and Enter key handler-->
+<!--  document.addEventListener("DOMContentLoaded", () => {-->
+<!--      connect();-->
+<!--      const input = document.getElementById("messageInput");-->
+<!--      input.addEventListener("keydown", function (e) {-->
+<!--          if (e.key === "Enter") {-->
+<!--              e.preventDefault();-->
+<!--              sendMessage();-->
+<!--          }-->
+<!--      });-->
+<!--  });-->
+<!--  /*]]>*/-->
+<!--</script>-->
+
+<!--</body>-->
+<!--</html>-->

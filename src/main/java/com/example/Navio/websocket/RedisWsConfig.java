@@ -37,16 +37,24 @@ public class RedisWsConfig {
     }
 
 
+    // --- FIX APPLIED HERE ---
     @Bean
     public MessageListenerAdapter chatListenerAdapter(RedisChatSubscriber subscriber) {
-        return new MessageListenerAdapter(subscriber, "handleMessage");
+        MessageListenerAdapter adapter = new MessageListenerAdapter(subscriber, "handleMessage");
+
+        // CRITICAL FIX: Ensure the raw Redis message payload is deserialized as a clean string.
+        // This is what allows the handleMessage(String jsonMessage) method to receive clean JSON
+        // that the JavaScript client can successfully parse later.
+        adapter.setSerializer(new StringRedisSerializer());
+
+        return adapter;
     }
 
     @Bean
     public MessageListenerAdapter listenerAdapter(RedisMessageSubscriber subscriber) {
-        return  new MessageListenerAdapter(subscriber, "onMessage");
-
-//        The method "onMessage" is called whenever a message is received.
-//                It acts as a “translator” between Redis and your Java class.
+        // Assuming this subscriber (for 'ride-requests') also expects a String payload:
+        MessageListenerAdapter adapter = new MessageListenerAdapter(subscriber, "onMessage");
+        adapter.setSerializer(new StringRedisSerializer());
+        return adapter;
     }
 }
