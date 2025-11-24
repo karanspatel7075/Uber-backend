@@ -39,20 +39,15 @@
 
             <form th:action="@{/uber/getMap}" method="get">
             <div class="space-y-4 max-w-sm">
-                <div class="relative">
-                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black h-2 w-2 rounded-full"></div>
-                    <input type="text" placeholder="Pickup location"
-                           class="w-full pl-8 py-3 pr-4 rounded border border-gray-300 focus:ring-2 focus:ring-black">
+                <div class="text-center mb-6 p-5 rounded-2xl backdrop-blur-lg bg-white/30 shadow-lg border border-white/40">
+                    <h2 class="text-2xl font-bold text-gray-900">Book Your Next Ride</h2>
+                    <p class="text-sm text-gray-700 mt-1">Just enter pickup and drop location</p>
                 </div>
 
-                <div class="relative">
-                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 bg-gray-400 h-2 w-2"></div>
-                    <input type="text" placeholder="Dropoff location"
-                           class="w-full pl-8 py-3 pr-4 rounded border border-gray-300 focus:ring-2 focus:ring-black">
-                </div>
+
 
                 <button class="w-full bg-black text-white py-4 rounded font-semibold hover:bg-gray-800">
-                    See prices
+                    Book your Ride Here
                 </button>
             </div>
             </form>

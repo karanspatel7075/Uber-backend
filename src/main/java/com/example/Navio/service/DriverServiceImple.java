@@ -14,6 +14,8 @@ import com.example.Navio.repository.DriverRepository;
 import com.example.Navio.repository.RideRepository;
 import com.example.Navio.repository.UserRepository;
 import com.example.Navio.repository.WalletRepository;
+import com.example.Navio.websocket.RedisMessageSubscriber;
+import com.example.Navio.websocket.RideEventPublisher;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -49,6 +51,9 @@ public class DriverServiceImple {
 
     @Autowired
     private CityCoordinatesService cityCoordinatesService;
+
+    @Autowired
+    private RideEventPublisher eventPublisher;
 
     private double[] getCoordinates(String city) {
         return switch (city.toLowerCase()) {
@@ -137,6 +142,10 @@ public class DriverServiceImple {
         ride.setStatus("Ongoing");
         ride.setStartTime(LocalDateTime.now());
         rideRepository.save(ride);
+
+        // 🔴 Publish WebSocket event to the rider
+        eventPublisher.publishRideAccepted(ride);
+
         return "Ride started successfully";
     }
 

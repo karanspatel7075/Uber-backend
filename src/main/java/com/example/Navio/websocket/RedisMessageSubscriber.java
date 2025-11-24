@@ -2,24 +2,28 @@ package com.example.Navio.websocket;
 
 //Subscriber: side
 
+import com.example.Navio.model.Ride;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.Map;
 
 
 @Component
 public class RedisMessageSubscriber implements MessageListener {
 
-    private final SimpMessagingTemplate messagingTemplate;
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
     private final ObjectMapper mapper = new ObjectMapper();
     private static final Logger log = LogManager.getLogger(RedisMessageSubscriber.class);
 

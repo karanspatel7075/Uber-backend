@@ -39,18 +39,20 @@
             </p>
 
             <!-- FORM -->
-            <form th:action="@{/rider/findDriver}" th:object="${rideRequestDto}" method="post">
+            <form th:action="@{/rider/findDriver}" th:object="${dto}" method="post">
                 <div class="space-y-4 max-w-sm">
 
                     <div class="relative">
                         <div class="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black h-2 w-2 rounded-full"></div>
-                        <input type="text" name="pickUpLocation" id="pickup" placeholder="Pickup location"
+                        <input type="text" name="pickUpLocation" th:value="${dto != null ? dto.pickUpLocation : ''}"
+                               id="pickup" placeholder="Pickup location"
                                class="w-full pl-8 py-3 pr-4 rounded border border-gray-300 focus:ring-2 focus:ring-black">
                     </div>
 
                     <div class="relative">
                         <div class="absolute left-3 top-1/2 transform -translate-y-1/2 bg-gray-400 h-2 w-2"></div>
-                        <input type="text" name="dropLocation" id="drop" placeholder="Dropoff location"
+                        <input type="text" name="dropLocation" id="drop" th:value="${dto != null ? dto.dropLocation : ''}"
+                               placeholder="Dropoff location"
                                class="w-full pl-8 py-3 pr-4 rounded border border-gray-300 focus:ring-2 focus:ring-black">
                     </div>
 
@@ -171,6 +173,10 @@
             // Trigger update
             pickupInput.addEventListener("change", updateMap);
             dropInput.addEventListener("change", updateMap);
+            
+
+            // Run automatically when page loads
+            updateMap();
 
         });
     </script>
@@ -179,4 +185,3 @@
 </section>
 
 </html>
-

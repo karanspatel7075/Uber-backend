@@ -2,6 +2,7 @@ package com.example.Navio.controller;
 
 import com.example.Navio.auth.*;
 import com.example.Navio.dto.UpdateUserDto;
+import com.example.Navio.model.Ride;
 import com.example.Navio.model.User;
 import com.example.Navio.model.enums.Role;
 import com.example.Navio.repository.UserRepository;
@@ -169,7 +170,9 @@ public class UserController {
     }
 
     @GetMapping("/getMap")
-    public String getMapping() {
+    public String getMapping(@ModelAttribute ("location") Ride location, Model model) {
+        model.addAttribute("pickup", location.getPickUpLocation());
+        model.addAttribute("drop", location.getDropLocation());
         return "/map";
     }
 
