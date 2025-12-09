@@ -1,6 +1,7 @@
 package com.example.Navio.controller;
 
 import com.example.Navio.auth.AuthTokenGen;
+import com.example.Navio.config.NearestDriverStrategy;
 import com.example.Navio.dto.DriverRequestDto;
 import com.example.Navio.model.Driver;
 import com.example.Navio.model.Ride;
@@ -39,6 +40,9 @@ public class DriverController {
     @Autowired
     private RideRepository rideRepository;
 
+    @Autowired
+    private NearestDriverStrategy nearestDriverStrategy;
+
     @GetMapping("/dashboard")
     public String dashboard(HttpServletRequest request, Model model) {
         Driver driver = driverServiceImple.findDriverByUser(request);
@@ -72,7 +76,7 @@ public class DriverController {
     }
 
     @PostMapping("/acceptRide")
-    public String acceptRide(HttpServletRequest request, @RequestParam Long rideId,  RedirectAttributes redirectAttributes) {
+    public String acceptRide(HttpServletRequest request, @RequestParam Long rideId,  Model model, RedirectAttributes redirectAttributes) {
         // Get logged-in driver
         String token = (String) request.getSession().getAttribute("jwtToken");
         String email = authTokenGen.getUsernameFromToken(token);
@@ -80,6 +84,7 @@ public class DriverController {
                 .orElseThrow(() -> new RuntimeException("Driver not found"));
 
         Driver driver = driverRepository.findByUserId(user.getId());
+        model.addAttribute("driver", driver);
 
         // Call the service
         String message = driverServiceImple.acceptRide(driver.getId(), rideId);
@@ -88,9 +93,23 @@ public class DriverController {
     }
 
     @GetMapping("/ride/{rideId}")
-    public String rideDetails(@PathVariable Long rideId, Model model) {
+    public String rideDetails(@PathVariable Long rideId, HttpServletRequest request, Model model) {
         Ride ride = rideRepository.findById(rideId).orElse(null);
         model.addAttribute("ride", ride);
+
+        // Get logged-in driver
+        String token = (String) request.getSession().getAttribute("jwtToken");
+        String email = authTokenGen.getUsernameFromToken(token);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Driver not found"));
+
+        Driver driver = driverRepository.findByUserId(user.getId());
+        model.addAttribute("driver", driver);
+
+        // Get rider info
+        User rider = userRepository.findById(ride.getRiderId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        model.addAttribute("rider", rider);
         return "driver/rideDetails";
     }
 
@@ -101,12 +120,33 @@ public class DriverController {
         return "redirect:/driver/ride/" + rideId;
     }
 
+//    @PostMapping("/endRide/{rideId}") / Primary Endpoint
+//    public String endRide(@PathVariable Long rideId, @RequestParam Double distance, RedirectAttributes redirectAttributes) {
+//        String message = driverServiceImple.endRide(rideId, distance);
+//        redirectAttributes.addFlashAttribute("message", message);
+//        return "redirect:/driver/ride/" + rideId;
+//    }
+
     @PostMapping("/endRide/{rideId}")
-    public String endRide(@PathVariable Long rideId, @RequestParam Double distance, RedirectAttributes redirectAttributes) {
+    public String endRide2(@PathVariable Long rideId, RedirectAttributes redirectAttributes) {
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new RuntimeException("Ride not found"));
+
+        double distance = nearestDriverStrategy.haversine(
+                ride.getPickUpLatitude(), ride.getPickUpLongitude(), ride.getDropLatitude(), ride.getDropLongitude());
+
         String message = driverServiceImple.endRide(rideId, distance);
         redirectAttributes.addFlashAttribute("message", message);
         return "redirect:/driver/ride/" + rideId;
     }
+
+//    @PostMapping("/endRide/{rideId}") // We were taking it from frontend
+//    public String endRide(@PathVariable Long rideId, @RequestParam Double pickupLat, @RequestParam Double pickupLon, @RequestParam Double dropLat, @RequestParam Double dropLon, RedirectAttributes redirectAttributes) {
+//        double distance = nearestDriverStrategy.haversine(pickupLat, pickupLon, dropLat, dropLon);
+//        String message = driverServiceImple.endRide(rideId, distance);
+//        redirectAttributes.addFlashAttribute("message", message);
+//        return "redirect:/driver/ride/" + rideId;
+//    }
 
     @PostMapping("/updateLocation")
     public String updateLocation(@RequestParam Long rideId, @RequestParam("dropLocation") String location, RedirectAttributes redirectAttributes) {

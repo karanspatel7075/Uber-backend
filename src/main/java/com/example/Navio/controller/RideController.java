@@ -93,6 +93,8 @@ public class RideController {
             String email = authTokenGen.getUsernameFromToken(token);
             User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("No user found"));
 
+
+
             // Saving the ride request
             rideRequestServiceImple.requestRide(driverId, dto, user);
 
@@ -101,7 +103,9 @@ public class RideController {
             Ride latestRide = rides.stream()
                     .max(Comparator.comparing(Ride::getRequestedTime))
                     .orElseThrow();
+
             // get the last one
+            Long latestId = latestRide.getId();
 
             // Find nearby drivers (for notification)
             List<Driver> nearbyDrivers = driverServiceImple.findNearbyDrivers(dto);
@@ -117,7 +121,10 @@ public class RideController {
             System.out.println("✅ Redis publish call complete.");
 
             redirectAttributes.addFlashAttribute("message", "Ride requested successfully ");
-            return "redirect:/rider/dashboard";
+//            return "redirect:/rider/dashboard";
+
+            // Redirect rider to the ride page
+            return "redirect:/rider/ride/" + latestId;
         } catch (Exception e) {
             e.printStackTrace(); // temp debugging
             redirectAttributes.addFlashAttribute("error", "Something went wrong: " + e.getMessage());
@@ -131,19 +138,9 @@ public class RideController {
         String email = authTokenGen.getUsernameFromToken(token);
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<Driver> availableDrivers = driverRepository.findByAvailableTrue();/*
-        List<Driver> nearByDriver = availableDrivers.stream()
-                .filter(d -> d.getCurrentLocation().equalsIgnoreCase(rideRequestDto.getPickUpLocation()))
-                .toList();*/
+        List<Driver> availableDrivers = driverRepository.findByAvailableTrue();
 
         List<Driver> nearbyDrivers = driverServiceImple.findNearbyDrivers(rideRequestDto);
-
-//        for(Driver d : availableDrivers) {
-//            double distance = strategy.haversine(riderLat, riderLon, d.getLatitude(), d.getLongitude());
-//            if(distance <= 5.0) {
-//                nearByDriver.add(d);
-//            }
-//        }                         // Add this function to find the nearest driver
 
         model.addAttribute("dto", rideRequestDto);
         model.addAttribute("drivers", nearbyDrivers);
@@ -197,5 +194,29 @@ public class RideController {
         logger.info("✅ Chat page model prepared successfully.");
         return "chat_page";
     }
+
+    @GetMapping("/ride/{rideId}")
+    public String rideDetails(@PathVariable Long rideId, Model model) {
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new RuntimeException("No ride is present"));
+
+        User rider = userRepository.findById(ride.getRiderId())
+                        .orElseThrow(() -> new RuntimeException("User not found"));
+
+        model.addAttribute("rider", rider);
+        model.addAttribute("ride", ride);
+        return "rider/rideDetails";
+    }
+
+    @GetMapping("/getPayment/{rideId}")
+    public String getPaymentMethod(@PathVariable Long rideId, Model model) {
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new RuntimeException("No ride found"));
+        model.addAttribute("ride", ride);
+        return "payments";
+    }
+
+
+
 
 }

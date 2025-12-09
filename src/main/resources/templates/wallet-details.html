@@ -1,48 +1,158 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="en" xmlns:th="http://www.thymeleaf.org"-->
+<!--      th:replace="~{base :: Layout(~{::section})}">-->
+<!--<section th:fragment="section" class="container my-4">-->
+<!--    <div class="card shadow p-4">-->
+<!--        <h2 class="mb-4 text-center">Wallet Details</h2>-->
+
+<!--        <div class="mb-3">-->
+<!--            <p><strong>User ID:</strong> <span th:text="${user.id}"></span></p>-->
+<!--            <p><strong>Name:</strong> <span th:text="${user.name}"></span></p>-->
+<!--            <p><strong>Balance:</strong> ₹<span th:text="${details.balance}"></span></p>-->
+<!--        </div>-->
+
+<!--        <hr>-->
+
+<!--        <h4>Transaction History</h4>-->
+<!--        <ul class="list-group mb-4">-->
+<!--            <li class="list-group-item" th:each="txn : ${details.transactionHistory}" th:text="${txn}">-->
+<!--                No transactions-->
+<!--            </li>-->
+<!--        </ul>-->
+
+<!--        <div class="row">-->
+<!--            &lt;!&ndash; Add Funds &ndash;&gt;-->
+<!--            <div class="col-md-6">-->
+<!--                <form th:action="@{/wallet/addFunds}" method="post" class="mb-3">-->
+<!--                    <input type="number" class="form-control" name="amount" placeholder="Enter amount" required min="1">-->
+<!--                    <button type="submit" class="btn btn-success">Add Funds</button>-->
+<!--                </form>-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; Debit Funds &ndash;&gt;-->
+<!--            <div class="col-md-6">-->
+<!--                <form th:action="@{/wallet/debitFunds}" method="post" class="mb-3">-->
+<!--                    <input type="number" class="form-control" name="amount" placeholder="Enter amount" required min="1">-->
+<!--                    <button type="submit" class="btn btn-danger">Debit Funds</button>-->
+<!--                </form>-->
+<!--            </div>-->
+<!--        </div>-->
+
+<!--        &lt;!&ndash; Messages &ndash;&gt;-->
+<!--        <div class="mt-3">-->
+<!--            <p class="text-success fw-bold" th:if="${message}" th:text="${message}"></p>-->
+<!--            <p class="text-danger fw-bold" th:if="${error}" th:text="${error}"></p>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</section>-->
+<!--</html>-->
+
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{base :: Layout(~{::section})}">
-<section th:fragment="section" class="container my-4">
-    <div class="card shadow p-4">
-        <h2 class="mb-4 text-center">Wallet Details</h2>
+<section th:fragment="section" class="container-fluid py-5" style="background-color: #f7f7f7;">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-5">
 
-        <div class="mb-3">
-            <p><strong>User ID:</strong> <span th:text="${details.userId}"></span></p>
-            <p><strong>Balance:</strong> ₹<span th:text="${details.balance}"></span></p>
-        </div>
+                    <h2 class="mb-4 text-center fw-bold" style="color: #1a1a1a;">💳 Digital Wallet</h2>
 
-        <hr>
+                    <div class="p-3 mb-4 rounded-3 text-white" style="background-color: #000000;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <p class="mb-0 text-uppercase opacity-75 small">Current Balance</p>
+                            <span class="badge bg-light text-dark fw-bold" th:text="'ID: ' + ${user.id}"></span>
+                        </div>
+                        <h1 class="display-5 fw-bolder">₹<span th:text="${details.balance}">0.00</span></h1>
+                        <p class="mb-0 opacity-75" th:text="'User: ' + ${user.name}"></p>
+                    </div>
 
-        <h4>Transaction History</h4>
-        <ul class="list-group mb-4">
-            <li class="list-group-item" th:each="txn : ${details.transactionHistory}" th:text="${txn}">
-                No transactions
-            </li>
-        </ul>
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <button type="button" class="btn btn-dark w-100 py-3 rounded-3 fw-bold" data-bs-toggle="modal" data-bs-target="#addFundsModal">
+                                Add Funds
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button type="button" class="btn btn-outline-dark w-100 py-3 rounded-3 fw-bold" data-bs-toggle="modal" data-bs-target="#debitFundsModal">
+                                Send Funds
+                            </button>
+                        </div>
+                    </div>
 
-        <div class="row">
-            <!-- Add Funds -->
-            <div class="col-md-6">
-                <form th:action="@{/wallet/addFunds}" method="post" class="mb-3">
-                    <input type="number" class="form-control" name="amount" placeholder="Enter amount" required min="1">
-                    <button type="submit" class="btn btn-success">Add Funds</button>
-                </form>
+                    <hr class="my-4">
+
+                    <h4 class="mb-3 fw-bold" style="color: #1a1a1a;">Recent Activity</h4>
+
+                    <ul class="list-group list-group-flush mb-4">
+                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center"
+                            th:each="txn : ${details.transactionHistory}">
+
+                            <span class="text-truncate" th:text="${txn}">Transaction detail goes here...</span>
+
+                            <small class="text-muted ms-3">Yesterday</small>
+                        </li>
+                        <li class="list-group-item text-center text-muted py-3"
+                            th:if="${#lists.isEmpty(details.transactionHistory)}">
+                            No recent transactions found.
+                        </li>
+                    </ul>
+
+                    <div class="mt-3">
+                        <div class="alert alert-success fw-bold" th:if="${message}" th:text="${message}"></div>
+                        <div class="alert alert-danger fw-bold" th:if="${error}" th:text="${error}"></div>
+                    </div>
+
+                </div>
             </div>
-
-            <!-- Debit Funds -->
-            <div class="col-md-6">
-                <form th:action="@{/wallet/debitFunds}" method="post" class="mb-3">
-                    <input type="number" class="form-control" name="amount" placeholder="Enter amount" required min="1">
-                    <button type="submit" class="btn btn-danger">Debit Funds</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Messages -->
-        <div class="mt-3">
-            <p class="text-success fw-bold" th:if="${message}" th:text="${message}"></p>
-            <p class="text-danger fw-bold" th:if="${error}" th:text="${error}"></p>
         </div>
     </div>
+
+    <div class="modal fade" id="addFundsModal" tabindex="-1" aria-labelledby="addFundsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addFundsModalLabel">Add Funds to Wallet</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form th:action="@{/wallet/addFunds}" method="post">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="addAmount" class="form-label">Amount (₹)</label>
+                            <input type="number" class="form-control form-control-lg" id="addAmount" name="amount" placeholder="e.g., 500" required min="1">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">Confirm Add</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="debitFundsModal" tabindex="-1" aria-labelledby="debitFundsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="debitFundsModalLabel">Debit / Send Funds</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form th:action="@{/wallet/debitFunds}" method="post">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="debitAmount" class="form-label">Amount (₹)</label>
+                            <input type="number" class="form-control form-control-lg" id="debitAmount" name="amount" placeholder="e.g., 200" required min="1">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Confirm Debit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 </section>
 </html>
-

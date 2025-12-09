@@ -40,4 +40,6 @@ public class Ride {
     private String status; // Requested, Accepted, Ongoing, Completed
     private Double fare;
     private Double rating;
+
+    private String paymentMethod;
 }

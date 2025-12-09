@@ -14,13 +14,14 @@ import com.example.Navio.repository.DriverRepository;
 import com.example.Navio.repository.RideRepository;
 import com.example.Navio.repository.UserRepository;
 import com.example.Navio.repository.WalletRepository;
-import com.example.Navio.websocket.RedisMessageSubscriber;
 import com.example.Navio.websocket.RideEventPublisher;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -151,25 +152,30 @@ public class DriverServiceImple {
 
     public String endRide(Long rideId, double distanceCovered) {
         Ride ride = rideRepository.findById(rideId).orElseThrow(() -> new RuntimeException("Ride not found"));
+
         ride.setStatus("Completed");
-        Driver driver = driverRepository.findById(ride.getDriverId()).orElseThrow(() -> new RuntimeException("Driver not found"));
+        Driver driver = driverRepository.findById(ride.getDriverId())
+                .orElseThrow(() -> new RuntimeException("Driver not found"));
+
         driver.setAvailable(true);
         ride.setEndTime(LocalDateTime.now());
 
-        double fare = calculateFare(distanceCovered);
-        ride.setFare(fare);
+        double fare = calculateFare(distanceCovered);  // your rate per km
+        BigDecimal roundedFare = new BigDecimal(fare).setScale(2, RoundingMode.HALF_UP); // For round figure
+
+        ride.setFare(roundedFare.doubleValue());
 
         //update wallet
         updateWallet(ride.getRiderId(), ride.getDriverId(), fare);
 
         rideRepository.save(ride);
         driverRepository.save(driver);
-        return "Ride completed successfully! Fare: ₹" + fare;
+        return "Ride completed successfully! Fare: ₹" + roundedFare;
     }
 
     public double calculateFare(double distanceCovered) {
-        double baseFare = 30.00;
-        double perKmRate = 10.00;
+        double baseFare = 15.00;
+        double perKmRate = 12.00;
         return baseFare + (perKmRate * distanceCovered);
     }
 

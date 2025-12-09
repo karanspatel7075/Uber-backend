@@ -36,4 +36,4 @@ spring.data.mongodb.uri=mongodb://localhost:27017/uberChats
 #spring.data.redis.host=localhost
 #spring.data.redis.port=6379
 
-stripe.secretKey=
+stripe.secretKey="enterSecretKey"

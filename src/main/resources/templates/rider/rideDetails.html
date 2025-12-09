@@ -53,24 +53,24 @@
       <div class="text-center mt-3">
 
         <th:block th:if="${driver!=null}">
-        <form th:if="${ride.status == 'Accepted'}"
-              th:action="@{/driver/startRide/{rideId}(rideId=${ride.id})}" method="post" class="d-inline">
-          <button type="submit" class="btn btn-warning px-4">Start Ride</button>
-        </form>
+          <form th:if="${ride.status == 'Accepted'}"
+                th:action="@{/driver/startRide/{rideId}(rideId=${ride.id})}" method="post" class="d-inline">
+            <button type="submit" class="btn btn-warning px-4">Start Ride</button>
+          </form>
 
-        <form th:if="${ride.status == 'Ongoing'}"
-              th:action="@{/driver/endRide/{rideId}(rideId=${ride.id})}" method="post" class="d-inline">
-<!--          <input type="number" name="distance" step="0.1" placeholder="Distance (km)"-->
-<!--                 required class="form-control d-inline-block w-auto me-2">-->
-          <button type="submit" class="btn btn-success px-4">End Ride</button>
-        </form>
+          <form th:if="${ride.status == 'Ongoing'}"
+                th:action="@{/driver/endRide/{rideId}(rideId=${ride.id})}" method="post" class="d-inline">
+            <!--          <input type="number" name="distance" step="0.1" placeholder="Distance (km)"-->
+            <!--                 required class="form-control d-inline-block w-auto me-2">-->
+            <button type="submit" class="btn btn-success px-4">End Ride</button>
+          </form>
 
-        <form th:if="${ride.status == 'Completed'}"
-              th:action="@{/driver/updateLocation}" method="post" class="d-inline">
-          <input type="hidden" name="rideId" th:value="${ride.id}">
-          <input type="hidden" name="dropLocation" th:value="${ride.dropLocation}">
-          <button type="submit" class="btn btn-success px-4">Update Location</button>
-        </form>
+          <form th:if="${ride.status == 'Completed'}"
+                th:action="@{/driver/updateLocation}" method="post" class="d-inline">
+            <input type="hidden" name="rideId" th:value="${ride.id}">
+            <input type="hidden" name="dropLocation" th:value="${ride.dropLocation}">
+            <button type="submit" class="btn btn-success px-4">Update Location</button>
+          </form>
 
         </th:block>
 

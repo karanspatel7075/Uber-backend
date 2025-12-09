@@ -1,6 +1,7 @@
 package com.example.Navio.service;
 
 import com.example.Navio.config.CityCoordinatesService;
+import com.example.Navio.config.NearestDriverStrategy;
 import com.example.Navio.dto.RideRequestDto;
 import com.example.Navio.interfaces.DriverMatchingStrategy;
 import com.example.Navio.model.Driver;
@@ -10,6 +11,7 @@ import com.example.Navio.repository.DriverRepository;
 import com.example.Navio.repository.RideRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +54,9 @@ public class RideRequestServiceImple {
     @Autowired
     private CityCoordinatesService cityCoordinatesService;
 
+    @Autowired
+    private NearestDriverStrategy nearestDriverStrategy;
+
 
     private double[] getCoordinates(String city) {
         return switch (city.toLowerCase()) {
@@ -81,8 +88,14 @@ public class RideRequestServiceImple {
         ride.setDropLatitude(dropCoords[0]);
         ride.setDropLongitude(dropCoords[1]);
 
+        double distance = nearestDriverStrategy.haversine(
+                ride.getPickUpLatitude(), ride.getPickUpLongitude(), ride.getDropLatitude(), ride.getDropLongitude());
+
         ride.setStatus("Requested");
-        ride.setFare(driverServiceImple.calculateFare(50));
+        double fare = driverServiceImple.calculateFare(distance);
+        BigDecimal roundedFare = new BigDecimal(fare).setScale(2, RoundingMode.HALF_UP); // For round figure
+        ride.setFare(roundedFare.doubleValue());
+
         System.out.println("Rider: " + user.getName());
         System.out.println("Driver: " + driver.getName());
         System.out.println("Pickup: " + dto.getPickUpLocation());
@@ -114,6 +127,11 @@ public class RideRequestServiceImple {
 
     public List<Ride> getAllRiders(Long riderId) {
         return rideRepository.findByRiderId(riderId);
+    }
+
+    public Ride getRideFromSession(User user) {
+        return rideRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
     public String rateDriver(Long rideId, Double rating) {

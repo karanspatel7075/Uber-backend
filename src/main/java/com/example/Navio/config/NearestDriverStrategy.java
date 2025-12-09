@@ -46,7 +46,7 @@ public class NearestDriverStrategy implements DriverMatchingStrategy {
 
         // Step 3: If Redis returns nothing, fallback to all available drivers
         if(nearbyDriverIds.isEmpty()) {
-            return  driverRepository.findByAvailableTrue();
+            return driverRepository.findByAvailableTrue();
         }
 
         // Step 4: Convert IDs → Full Driver entities from DB
