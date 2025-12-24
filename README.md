@@ -1,4 +1,7 @@
 # Uber-backend
+
+<img width="1536" height="1024" alt="ChatGPT Image Dec 24, 2025, 12_43_20 PM" src="https://github.com/user-attachments/assets/2132e9b3-62f2-4bf9-80dd-47077bfe4251" />
+
 Navio is a full-stack, Uber-like ride booking platform built using Spring Boot, designed with real-time communication, scalable architecture, and modern backend practices.
 
 It supports ride booking, driver matching, live chat, payments, wallets, and real-time notifications using WebSockets and Redis.
