@@ -1,209 +1,199 @@
-# Uber-backend
+# 🚕 Navio – Uber-Like Ride Booking Backend
 
-<img width="1536" height="1024" alt="ChatGPT Image Dec 24, 2025, 12_43_20 PM" src="https://github.com/user-attachments/assets/2132e9b3-62f2-4bf9-80dd-47077bfe4251" />
+<img width="1536" height="1024" alt="Navio Architecture" src="https://github.com/user-attachments/assets/2132e9b3-62f2-4bf9-80dd-47077bfe4251" />
 
-Navio is a full-stack, Uber-like ride booking platform built using Spring Boot, designed with real-time communication, scalable architecture, and modern backend practices.
+Navio is a **scalable, Uber-like ride booking backend system** built using **Spring Boot**.  
+It is designed with **real-time communication**, **secure authentication**, and **modern backend architecture** to handle ride booking, driver matching, live chat, payments, wallets, and notifications.
 
-It supports ride booking, driver matching, live chat, payments, wallets, and real-time notifications using WebSockets and Redis.
+---
 
-# 📌 Features
+## 📌 Key Highlights
 
-# 👤 User & Driver
+- Real-time ride booking & tracking
+- Driver matching using geo-location
+- Secure JWT-based authentication
+- WebSocket-powered live updates & chat
+- Redis-based scalable messaging
+- Stripe payment integration
+- Clean layered architecture (Controller → Service → Repository)
 
-Secure authentication & authorization (Spring Security + JWT)
+---
 
-Role-based access (USER, DRIVER, ADMIN)
+## 👤 User & Driver Features
 
-Wallet system for users
+- Secure authentication & authorization (Spring Security + JWT)
+- Role-based access control: **USER, DRIVER, ADMIN**
+- Wallet system for riders
+- Driver availability & live location tracking
+- Admin onboarding & system monitoring
 
-Driver availability & live location tracking
+---
 
+## 🚗 Ride Management
 
+- Ride request & driver selection
+- Pickup & drop locations with latitude & longitude
+- Complete ride lifecycle management:
+  - Requested
+  - Accepted
+  - Ongoing
+  - Completed / Cancelled
+- Real-time ride status updates
 
-# 🚗 Ride Management
+---
 
-Ride request & driver selection
+## 💬 Real-Time Chat System
 
-Pickup & drop location with latitude/longitude
+- WebSocket-based private chat (Driver ↔ Rider)
+- Redis Pub/Sub for horizontal scalability
+- MongoDB for chat message persistence
+- Supports multi-tab & multi-instance deployment
 
-Ride lifecycle:
+---
 
-Requested
+## 💳 Payments & Wallet
 
-Accepted
+- Stripe Checkout integration
+- Secure ride-based payment sessions
+- Payment status tracking:
+  - Pending
+  - Success
+  - Failed
+- Wallet balance management & fare deduction
 
-Ongoing
+---
 
-Completed
+## 📡 Real-Time Infrastructure
 
+- WebSockets (STOMP + SockJS)
+- Redis used for:
+  - Pub/Sub messaging
+  - Live driver location tracking (Geo)
+- MongoDB for chat data
+- MySQL for transactional data
 
-# 💬 Real-Time Chat System
+---
 
-WebSocket-based private chat
+## 🔑 Backend Framework & Core Concepts
 
-Redis Pub/Sub for horizontal scalability
+- **Spring Boot** – Rapid backend development & auto-configuration
+- **Spring IOC Container** – Manages beans and lifecycle
+- **Dependency Injection** – Loose coupling & scalability
+- **Spring MVC Architecture** – Clean separation of concerns
+- **Lombok** – Reduces boilerplate using annotations like  
+  `@Getter`, `@Setter`, `@Builder`, etc.
 
-Chat history stored in MongoDB
+---
 
-Multi-tab & multi-instance support
+## 🛡️ Security & Authentication
 
+- Spring Security for API protection
+- JWT-based stateless authentication
+- Role-Based Access Control (RBAC):
+  - Rider
+  - Driver
+  - Admin
+- BCrypt password encryption
+- Custom JWT filters for request validation
 
+---
 
-# 💳 Payments
+## 🌍 Ride Matching & Business Logic
 
-Stripe Checkout integration
+- Rider can request a ride
+- Nearest available drivers matched using location-based logic
+- Driver availability tracking in real-time
+- Efficient geo-distance calculations
+- Modular strategy-based matching design
 
-Ride-based payment sessions
+---
 
-Secure payment verification
+## ⚡ Real-Time Communication
 
-Wallet balance management
+- WebSocket (STOMP + SockJS) for:
+  - Ride status updates
+  - Notifications
+  - Driver ↔ Rider messaging
+- Redis Pub/Sub for:
+  - Event broadcasting
+  - Low-latency message delivery
 
+---
 
-# 📡 Real-Time Infrastructure
+## 🗄️ Database & Persistence
 
-WebSockets (STOMP)
+### Relational Database
+- **MySQL**
+  - Users, Drivers, Rides, Payments
+- **Spring Data JPA**
+  - Repository-based access
+  - Custom JPQL & native queries
+- **Hibernate ORM**
+  - Optimized object-relational mapping
 
-Redis for:
+### NoSQL & In-Memory
+- **MongoDB**
+  - Chat message storage
+- **Redis**
+  - Location caching
+  - Pub/Sub messaging
+  - Fast in-memory access
 
-Pub/Sub messaging
+---
 
-Live driver tracking (Geo)
+## 🧪 Validation, Exception Handling & Logging
 
-MongoDB for chat messages
+- Spring Bean Validation for request validation
+- Global exception handling with meaningful API responses
+- Logging & auditing using **Log4j**
+- Tracks user actions, ride events, and system activity
 
-MySQL for transactional data
+---
 
-# 🔑 Key Features
+## 📊 Monitoring & API Documentation
 
-🚀 Backend Framework & Core Concepts
+- **Spring Boot Actuator**
+  - Health checks
+  - Application metrics
+- **Swagger (OpenAPI)**
+  - Interactive REST API documentation
+- **Postman Collections**
+  - API testing & validation
 
-Spring Boot: Used for rapid backend development and auto-configuration.<br>
-Spring IOC Container: Manages application components and lifecycle.<br>
-Beans & Auto Configuration: Leveraged Spring Boot’s internal configurations.<br>
-Dependency Injection: Extensively used for loose coupling and scalability.<br>
-Spring MVC Architecture: Clear separation of Controller, Service, and Repository layers.<br>
-Lombok: Reduced boilerplate code using annotations like @Getter, @Setter, @Builder, etc.<br>
+---
 
+## 📧 Email Notifications
 
-🛡️ Security & Authentication
+- JavaMailSender integration
+- OTP verification emails
+- Ride acceptance notifications
+- Important system alerts
 
-Spring Security: Implemented to secure REST APIs.<br>
-JWT Authentication: Stateless authentication for users and drivers.<br>  
-Role-Based Access Control (RBAC):<br>
-Rider<br>
-Driver<br>
-Admin<br>
-Password Encryption: Secure password hashing using BCrypt.<br>
-Custom Security Filters: JWT validation and request authorization.<br>
+---
 
+## 🚢 Deployment (In Progress)
 
-🌍 Ride Management & Core Business Logic
+- Dockerized backend service
+- Deployment planned on **Render**
+- Cloud database support:
+  - Neon PostgreSQL (planned for production)
+- Designed for future **microservices scalability**
 
-Ride Request & Matching System:<br>
-Riders can request rides.<br>
-Nearest drivers matched using location-based logic.<br>
-Ride Lifecycle Management:<br>
-Ride Requested<br>
-Ride Accepted<br>
-Ride Started<br>
-Ride Completed / Cancelled<br>
-Driver Availability Tracking: Real-time driver status updates.<br>
-Geo-location Handling: Efficient distance calculations and driver discovery.<br>
+---
 
+## 🧠 Design Patterns Used
 
-⚡ Real-Time Communication
+- Strategy Pattern (Driver matching, fare calculation)
+- Builder Pattern
+- Factory Pattern
+- Singleton Pattern
 
-WebSocket (STOMP + SockJS):<br>
-Real-time ride updates<br>
-Live ride status notifications<br>
-Driver ↔ Rider communication<br>
-Redis Pub/Sub:<br>
-Message broadcasting<br>
-Real-time event handling<br>
-Low Latency Messaging: Optimized for instant updates.<br>
+---
 
+## 📄 License
 
-💬 Chat System
+This project is developed for **learning, demonstration, and portfolio purposes**.
 
-Real-Time Chat between Rider and Driver.<br>
-WebSocket-Based Messaging.<br>
-MongoDB used for storing chat messages.<br>
-Scalable Message Storage independent of transactional data.<br>
+---
 
-
-💳 Payments & Wallet
-
-Stripe Integration:<br>
-Secure ride payment processing.<br>
-Wallet Management System:<br>
-Track user balances<br>
-Ride fare deductions<br>
-Payment Status Tracking:<br>
-Pending<br>
-Success<br>
-Failed<br>
-
-
-🗄️ Database & Persistence
-
-MySQL:<br>
-Core transactional data (Users, Drivers, Rides, Payments).<br>
-
-MongoDB:<br>
-Chat message storage.<br>
-
-Redis (In-Memory):<br>
-Location caching<br>
-Pub/Sub messaging<br>
-Session-like fast data access<br>
-
-Spring Data JPA:<br>
-Repository-based database access.<br>
-Custom JPQL & native queries.<br>
-Hibernate ORM:<br>
-Object-Relational Mapping with optimized queries.<br>
-
-
-🧪 Validation, Exception Handling & Logging
-
-Spring Bean Validation:<br>
-Request payload validation using annotations.<br>
-
-Global Exception Handling:<br>
-Centralized error handling with meaningful responses.<br>
-
-Logging & Auditing:<br>
-Implemented using Log4j.<br>
-Tracks user actions, ride updates, and system events.<br>
-
-
-📊 Monitoring & Documentation
-
-Spring Boot Actuator:<br>
-Health checks<br>
-Metrics monitoring<br>
-Swagger (OpenAPI):<br>
-Interactive API documentation.<br>
-Postman Collections:<br>
-API testing and validation.<br>
-
-
-📧 Email Notifications
-
-JavaMailSender:<br>
-OTP verification emails<br>
-Ride acceptance notifications<br>
-Important system alerts<br>
-
-
-🚢 Deployment (In Progress)
-
-Dockerized Application:<br>
-Containerized backend service.<br>
-Render Deployment:<br>
-Hosting backend services.<br>
-Cloud Database:<br>
-Neon PostgreSQL (planned for production).<br>
-Scalable Architecture:<br>
-Designed to support microservices in future.<br>
+### ⭐ If you like this project, don’t forget to star the repository!
