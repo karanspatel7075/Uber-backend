@@ -6,10 +6,15 @@ It supports ride booking, driver matching, live chat, payments, wallets, and rea
 📌 Features
 
 👤 User & Driver
+
 Secure authentication & authorization (Spring Security + JWT)
+
 Role-based access (USER, DRIVER, ADMIN)
+
 Wallet system for users
+
 Driver availability & live location tracking
+
 
 🚗 Ride Management
 Ride request & driver selection
