@@ -19,6 +19,24 @@ It is designed with **real-time communication**, **secure authentication**, and 
 
 ---
 
+## 💻 Tech Stack
+
+| Layer | Technologies Used |
+|------|------------------|
+| 🎨 Frontend | Thymeleaf, HTML, CSS, Bootstrap, Javascript |
+| 💻 Backend | Java 17, Spring Boot |
+| 🔒 Authentication & Security | JWT, Spring Security (Role-Based Authentication) |
+| 🧩 ORM | Spring Data JPA, Hibernate |
+| 🌐 Real-Time | WebSocket (STOMP) |
+| 💬 Messaging | Redis (Pub/Sub, GEO) |
+| 🗄️ Chat Persistence | MongoDB |
+| 🗃️ Relational Data | MySQL |
+| 💰 Payments | Stripe API |
+| 📬 Email | JavaMailSender |
+| 🛠️ Build & Dependency | Maven) |
+
+---
+
 ## 👤 User & Driver Features
 
 - Secure authentication & authorization (Spring Security + JWT)
