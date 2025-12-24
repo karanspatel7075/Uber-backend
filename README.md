@@ -78,17 +78,17 @@ MySQL for transactional data
 
 🚀 Backend Framework & Core Concepts
 
-Spring Boot: Used for rapid backend development and auto-configuration.
+Spring Boot: Used for rapid backend development and auto-configuration.<br>
 
-Spring IOC Container: Manages application components and lifecycle.
+Spring IOC Container: Manages application components and lifecycle.<br>
 
-Beans & Auto Configuration: Leveraged Spring Boot’s internal configurations.
+Beans & Auto Configuration: Leveraged Spring Boot’s internal configurations.<br>
 
-Dependency Injection: Extensively used for loose coupling and scalability.
+Dependency Injection: Extensively used for loose coupling and scalability.<br>
 
-Spring MVC Architecture: Clear separation of Controller, Service, and Repository layers.
+Spring MVC Architecture: Clear separation of Controller, Service, and Repository layers.<br>
 
-Lombok: Reduced boilerplate code using annotations like @Getter, @Setter, @Builder, etc.
+Lombok: Reduced boilerplate code using annotations like @Getter, @Setter, @Builder, etc.<br>
 
 
 🛡️ Security & Authentication
