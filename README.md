@@ -95,7 +95,7 @@ Lombok: Reduced boilerplate code using annotations like @Getter, @Setter, @Build
 
 Spring Security: Implemented to secure REST APIs.
 
-JWT Authentication: Stateless authentication for users and drivers.
+JWT Authentication: Stateless authentication for users and drivers.  
 
 Role-Based Access Control (RBAC):
 
