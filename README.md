@@ -5,7 +5,7 @@ It supports ride booking, driver matching, live chat, payments, wallets, and rea
 
 📌 Features
 
-👤 User & Driver
+# 👤 User & Driver
 
 Secure authentication & authorization (Spring Security + JWT)
 
@@ -16,31 +16,58 @@ Wallet system for users
 Driver availability & live location tracking
 
 
-🚗 Ride Management
+
+# 🚗 Ride Management
+
 Ride request & driver selection
+
 Pickup & drop location with latitude/longitude
+
 Ride lifecycle:
+
 Requested
+
 Accepted
+
 Ongoing
+
 Completed
 
-💬 Real-Time Chat System
+
+# 💬 Real-Time Chat System
+
 WebSocket-based private chat
+
 Redis Pub/Sub for horizontal scalability
+
 Chat history stored in MongoDB
+
 Multi-tab & multi-instance support
 
-💳 Payments
+
+
+# 💳 Payments
+
 Stripe Checkout integration
+
 Ride-based payment sessions
+
 Secure payment verification
+
 Wallet balance management
 
-📡 Real-Time Infrastructure
+
+# 📡 Real-Time Infrastructure
+
 WebSockets (STOMP)
+
 Redis for:
+
 Pub/Sub messaging
+
 Live driver tracking (Geo)
+
 MongoDB for chat messages
+
 MySQL for transactional data
+
