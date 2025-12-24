@@ -79,199 +79,131 @@ MySQL for transactional data
 🚀 Backend Framework & Core Concepts
 
 Spring Boot: Used for rapid backend development and auto-configuration.<br>
-
 Spring IOC Container: Manages application components and lifecycle.<br>
-
 Beans & Auto Configuration: Leveraged Spring Boot’s internal configurations.<br>
-
 Dependency Injection: Extensively used for loose coupling and scalability.<br>
-
 Spring MVC Architecture: Clear separation of Controller, Service, and Repository layers.<br>
-
 Lombok: Reduced boilerplate code using annotations like @Getter, @Setter, @Builder, etc.<br>
 
 
 🛡️ Security & Authentication
 
-Spring Security: Implemented to secure REST APIs.
-
-JWT Authentication: Stateless authentication for users and drivers.  
-
-Role-Based Access Control (RBAC):
-
-Rider
-
-Driver
-
-Admin
-
-Password Encryption: Secure password hashing using BCrypt.
-
-Custom Security Filters: JWT validation and request authorization.
+Spring Security: Implemented to secure REST APIs.<br>
+JWT Authentication: Stateless authentication for users and drivers.<br>  
+Role-Based Access Control (RBAC):<br>
+Rider<br>
+Driver<br>
+Admin<br>
+Password Encryption: Secure password hashing using BCrypt.<br>
+Custom Security Filters: JWT validation and request authorization.<br>
 
 
 🌍 Ride Management & Core Business Logic
 
-Ride Request & Matching System:
-
-Riders can request rides.
-
-Nearest drivers matched using location-based logic.
-
-Ride Lifecycle Management:
-
-Ride Requested
-
-Ride Accepted
-
-Ride Started
-
-Ride Completed / Cancelled
-
-Driver Availability Tracking: Real-time driver status updates.
-
-Geo-location Handling: Efficient distance calculations and driver discovery.
+Ride Request & Matching System:<br>
+Riders can request rides.<br>
+Nearest drivers matched using location-based logic.<br>
+Ride Lifecycle Management:<br>
+Ride Requested<br>
+Ride Accepted<br>
+Ride Started<br>
+Ride Completed / Cancelled<br>
+Driver Availability Tracking: Real-time driver status updates.<br>
+Geo-location Handling: Efficient distance calculations and driver discovery.<br>
 
 
 ⚡ Real-Time Communication
 
-WebSocket (STOMP + SockJS):
-
-Real-time ride updates
-
-Live ride status notifications
-
-Driver ↔ Rider communication
-
-Redis Pub/Sub:
-
-Message broadcasting
-
-Real-time event handling
-
-Low Latency Messaging: Optimized for instant updates.
+WebSocket (STOMP + SockJS):<br>
+Real-time ride updates<br>
+Live ride status notifications<br>
+Driver ↔ Rider communication<br>
+Redis Pub/Sub:<br>
+Message broadcasting<br>
+Real-time event handling<br>
+Low Latency Messaging: Optimized for instant updates.<br>
 
 
 💬 Chat System
 
-Real-Time Chat between Rider and Driver.
-
-WebSocket-Based Messaging.
-
-MongoDB used for storing chat messages.
-
-Scalable Message Storage independent of transactional data.
+Real-Time Chat between Rider and Driver.<br>
+WebSocket-Based Messaging.<br>
+MongoDB used for storing chat messages.<br>
+Scalable Message Storage independent of transactional data.<br>
 
 
 💳 Payments & Wallet
 
-Stripe Integration:
-
-Secure ride payment processing.
-
-Wallet Management System:
-
-Track user balances
-
-Ride fare deductions
-
-Payment Status Tracking:
-
-Pending
-
-Success
-
-Failed
+Stripe Integration:<br>
+Secure ride payment processing.<br>
+Wallet Management System:<br>
+Track user balances<br>
+Ride fare deductions<br>
+Payment Status Tracking:<br>
+Pending<br>
+Success<br>
+Failed<br>
 
 
 🗄️ Database & Persistence
 
-MySQL:
+MySQL:<br>
+Core transactional data (Users, Drivers, Rides, Payments).<br>
 
-Core transactional data (Users, Drivers, Rides, Payments).
+MongoDB:<br>
+Chat message storage.<br>
 
-MongoDB:
+Redis (In-Memory):<br>
+Location caching<br>
+Pub/Sub messaging<br>
+Session-like fast data access<br>
 
-Chat message storage.
-
-Redis (In-Memory):
-
-Location caching
-
-Pub/Sub messaging
-
-Session-like fast data access
-
-Spring Data JPA:
-
-Repository-based database access.
-
-Custom JPQL & native queries.
-
-Hibernate ORM:
-
-Object-Relational Mapping with optimized queries.
+Spring Data JPA:<br>
+Repository-based database access.<br>
+Custom JPQL & native queries.<br>
+Hibernate ORM:<br>
+Object-Relational Mapping with optimized queries.<br>
 
 
 🧪 Validation, Exception Handling & Logging
 
-Spring Bean Validation:
+Spring Bean Validation:<br>
+Request payload validation using annotations.<br>
 
-Request payload validation using annotations.
+Global Exception Handling:<br>
+Centralized error handling with meaningful responses.<br>
 
-Global Exception Handling:
-
-Centralized error handling with meaningful responses.
-
-Logging & Auditing:
-
-Implemented using Log4j.
-
-Tracks user actions, ride updates, and system events.
+Logging & Auditing:<br>
+Implemented using Log4j.<br>
+Tracks user actions, ride updates, and system events.<br>
 
 
 📊 Monitoring & Documentation
 
-Spring Boot Actuator:
-
-Health checks
-
-Metrics monitoring
-
-Swagger (OpenAPI):
-
-Interactive API documentation.
-
-Postman Collections:
-
-API testing and validation.
+Spring Boot Actuator:<br>
+Health checks<br>
+Metrics monitoring<br>
+Swagger (OpenAPI):<br>
+Interactive API documentation.<br>
+Postman Collections:<br>
+API testing and validation.<br>
 
 
 📧 Email Notifications
 
-JavaMailSender:
-
-OTP verification emails
-
-Ride acceptance notifications
-
-Important system alerts
+JavaMailSender:<br>
+OTP verification emails<br>
+Ride acceptance notifications<br>
+Important system alerts<br>
 
 
 🚢 Deployment (In Progress)
 
-Dockerized Application:
-
-Containerized backend service.
-
-Render Deployment:
-
-Hosting backend services.
-
-Cloud Database:
-
-Neon PostgreSQL (planned for production).
-
-Scalable Architecture:
-
-Designed to support microservices in future.
+Dockerized Application:<br>
+Containerized backend service.<br>
+Render Deployment:<br>
+Hosting backend services.<br>
+Cloud Database:<br>
+Neon PostgreSQL (planned for production).<br>
+Scalable Architecture:<br>
+Designed to support microservices in future.<br>
